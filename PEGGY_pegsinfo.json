@@ -1,0 +1,5 @@
+{
+"Pegs_Launch_Parameters":"-ac_supply=5000 -ac_reward=800000000 -ac_sapling=1 -addnode=localhost -ac_snapshot=1440 -ac_cc=2 -ac_import=PEGSCC -debug=gatewayscc-2 -ac_end=1 -ac_perc=0 -ac_cbopret=7 -ac_name=PEGGY -earlytxid=edfc5573942265d7be5b5cce02509dc4c9c56ddb6ab9bb8359186040ab10ec43",
+"Oraclefeed_Launch_Parameters":"/home/smk762/Mixa84/komodo/src/oraclefeed PEGGY 9a7c73b54a449ef086e88537b4c47dac45d6bc551cbefee00794b3be0b045578 034fea3f6247ef81fc1ee92fedaf23441427a96a7d4e0d4c2db247036a1b9d99b2 Ihh 13df8f92f3a7a9ae84e3a5814b03a2ad2fde38abbacf5565faff9aad45113775 /home/smk762/Mixa84/komodo/src/komodo-cli",
+"Pegs_Creation_TXID":"edfc5573942265d7be5b5cce02509dc4c9c56ddb6ab9bb8359186040ab10ec43",
+"Gateways_Bind_TXID":"13df8f92f3a7a9ae84e3a5814b03a2ad2fde38abbacf5565faff9aad45113775",

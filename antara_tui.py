@@ -28,7 +28,7 @@ oracles['menu'] = [
     {"Return to Antara modules menu": tuilib.exit_main},
     {"Exit TUI": tuilib.exit}
 ]
-oracles['author'] = 'Welcome to the OraclesCC TUI!\n"CLI version 0.2 by Anton Lysakov & Thorn Mennet\n'
+oracles['author'] = 'Welcome to the OraclesCC TUI!\nCLI version 0.2 by Anton Lysakov & Thorn Mennet\n'
 
 pegs_usage = {}
 pegs_usage['header'] = "\
@@ -59,7 +59,7 @@ pegs_usage['menu'] = [
     {"Return to Antara modules menu": tuilib.exit_main},
     {"Exit TUI": tuilib.exit}
 ]
-pegs_usage['author'] = 'Welcome to the Pegs Usage TUI!\n"CLI version 0.2 by Thorn Mennet\n'
+pegs_usage['author'] = 'Welcome to the Pegs Usage TUI!\nCLI version 0.2 by Thorn Mennet\n'
 
 pegs_create = {}
 pegs_create['header'] = "\
@@ -79,7 +79,7 @@ pegs_create['menu'] = [
     {"Return to Antara modules menu": tuilib.exit_main},
     {"Exit TUI": tuilib.exit}
 ]
-pegs_create['author'] = 'Welcome to the Pegs Creation TUI!\n"CLI version 0.2 by Thorn Mennet\n'
+pegs_create['author'] = 'Welcome to the Pegs Creation TUI!\nCLI version 0.2 by Thorn Mennet\n'
 
 
 
@@ -106,7 +106,7 @@ gw_create['menu'] = [
     {"Return to Antara modules menu": tuilib.exit_main},
     {"Exit TUI": tuilib.exit}
 ]
-gw_create['author'] = 'Welcome to the Gateways Creation TUI!\n"CLI version 0.2 by Anton Lysakov & Thorn Mennet\n'
+gw_create['author'] = 'Welcome to the Gateways Creation TUI!\nCLI version 0.2 by Anton Lysakov & Thorn Mennet\n'
 
 
 gw_use = {}
@@ -133,7 +133,7 @@ gw_use['menu'] = [
     {"Return to Antara modules menu": tuilib.exit_main},
     {"Exit TUI": tuilib.exit}
 ]
-gw_use['author'] = 'Welcome to the Gateways Creation TUI!\n"CLI version 0.2 by Anton Lysakov & Thorn Mennet\n'
+gw_use['author'] = 'Welcome to the Gateways Creation TUI!\nCLI version 0.2 by Anton Lysakov & Thorn Mennet\n'
 
 payments = {}
 payments['header'] = "\
@@ -157,7 +157,7 @@ payments['menu'] = [
     {"Return to Antara modules menu": tuilib.exit_main},
     {"Exit TUI": tuilib.exit}
 ]
-payments['author'] = '"Welcome to the Payments Module TUI!\n"CLI version 0.2 by Thorn Mennet\n'
+payments['author'] = 'Welcome to the Payments Module TUI!\nCLI version 0.2 by Thorn Mennet\n'
 
 antara = {}
 antara['header'] = "\
@@ -186,7 +186,7 @@ main_menu_options = ["Oracles", "Gateways Creation", "Gateways Usage", "Pegs Cre
 kmd_ac_rpc_options = ["Deposit KMD in Gateway and claim Tokens"]
 kmd_rpc_options = ["Check connection to KMD", "Send KMD gateway deposit transaction", "Execute gateways deposit"]
 kmd_connect_options = ["Connect to KMD daemon"]
-no_param_options = ["Exit TUI"]
+no_param_options = ["Exit TUI", "Create a Pegs assetchain"]
 # TODO: add more readme docs
 docs_options = ["Pegs Module Readme"]
 readme_files = ['docs/pegs_module.md']

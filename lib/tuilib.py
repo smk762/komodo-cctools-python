@@ -23,22 +23,27 @@ if operating_system != 'Win64' and operating_system != 'Windows':
 
 
 def colorize(string, color):
-
-    colors = {
-        'blue': '\033[94m',
-        'cyan': '\033[96m',
-        'yellow': '\033[93m',
-        'magenta': '\033[95m',
-        'green': '\033[92m',
-        'red': '\033[91m',
-        'black': '\033[30m',
-        'grey': '\033[90m',
-        'pink': '\033[95m'        
-    }
-    if color not in colors:
-        return string
-    else:
-        return colors[color] + string + '\033[0m'
+        colors = {
+                'black':'\033[30m',
+                'red':'\033[31m',
+                'green':'\033[32m',
+                'orange':'\033[33m',
+                'blue':'\033[34m',
+                'purple':'\033[35m',
+                'cyan':'\033[36m',
+                'lightgrey':'\033[37m',
+                'darkgrey':'\033[90m',
+                'lightred':'\033[91m',
+                'lightgreen':'\033[92m',
+                'yellow':'\033[93m',
+                'lightblue':'\033[94m',
+                'pink':'\033[95m',
+                'lightcyan':'\033[96m',
+        }
+        if color not in colors:
+                return str(string)
+        else:
+                return colors[color] + str(string) + '\033[0m'
 
 
 def rpc_connection_tui():
@@ -310,19 +315,27 @@ def oracle_subscription_utxogen(rpc_connection, oracle_txid='', publisher_id='',
                 utxo_num = int(input("Input how many transactions you want to broadcast: "))
         except KeyboardInterrupt:
             break
+        subscription_txids = []
         while utxo_num > 0:
             while True:
                 oracle_subscription_hex = rpclib.oracles_subscribe(rpc_connection, oracle_txid, publisher_id, data_fee)
                 oracle_subscription_txid = rpclib.sendrawtransaction(rpc_connection, oracle_subscription_hex['hex'])
                 mempool = rpclib.get_rawmempool(rpc_connection)
                 if oracle_subscription_txid in mempool:
+                    subscription_txids.append(oracle_subscription_txid)
                     break
                 else:
                     pass
             print(colorize("Oracle subscription transaction broadcasted: " + oracle_subscription_txid, "green"))
             utxo_num = utxo_num - 1
-            time.sleep(1)
-            check_if_tx_in_mempool(rpc_connection, oracle_subscription_txid)
+            time.sleep(0.5)
+        while len(subscription_txids) > 0:
+            print(colorize("Waiting for "+str(len(subscription_txids))+" subscriptions to confirm.", "blue"))
+            mempool = rpclib.get_rawmempool(rpc_connection)
+            for txid in subscription_txids:
+                if txid not in mempool:
+                    subscription_txids.remove(txid)
+            time.sleep(30)
         input("Press [Enter] to continue...")
         break
 
@@ -2393,6 +2406,10 @@ def pegs_create_tui():
         paramlist.append("-earlytxid="+pegs_txid)
         print(colorize("The Pegs Contract has been created successfully!", 'green'))
         info = primary_rpc.gatewaysinfo(bind_txid)
+        while 'oracle_txid' not in info:
+            time.sleep(30)
+            print(colorize("Waiting for gateways bind to confirm...", 'orange'))
+            info = primary_rpc.gatewaysinfo(bind_txid)
         with open(cwd+"/"+coin+"_pegsinfo.json", "w+") as file:
             file.write('{\n"Pegs_Launch_Parameters":"'+" ".join(paramlist)+'",\n')
             file.write('"Oraclefeed_Launch_Parameters":"'+oraclefeed_launch_str+'",\n')
@@ -2483,7 +2500,6 @@ def get_commit_hash(repo_path):
 def launch_chain(coin, kmd_path, params, pubkey=''):
     if pubkey != '':
         params.append("-pubkey="+pubkey)
-    print(params)
     commit = get_commit_hash(kmd_path)
     test_log = coin+"_"+commit+".log"
     test_output = open(test_log,'w+')
@@ -2501,14 +2517,10 @@ def launch_chain(coin, kmd_path, params, pubkey=''):
         try:
             pegs_rpc = rpclib.def_credentials(coin)
             coin_info = pegs_rpc.getinfo()
-            print(coin_info)
-            started = 1
             break
-        except:
-            print("Waiting for "+coin+" to start...")
+        except Exception as e:
+            print("Waiting for "+coin+" to start... "+str(e))
             pass
-        if started == 1:
-            break
         if loop > 10:
             print("Something went wrong. Check "+test_log)
             break
@@ -2557,7 +2569,15 @@ def spawn_chain_pair(coin, kmd_path, paramlist):
     height = primary_rpc.getblockcount()
     while height < 3:
         height = primary_rpc.getblockcount()
-        print("Premining first 3 blocks... ("+str(height)+"/3)")
+        if height == 0:
+            color = 'orange'
+        elif height == 1:
+            color = 'blue'
+        elif height == 2:
+            color = 'cyan'
+        elif height == 2:
+            color = 'green'
+        print(colorize("Premining first 3 blocks... ("+str(height)+"/3)", color))
         time.sleep(20)
     balance = primary_rpc.getbalance()
     balance2 = secondary_rpc.getbalance()
