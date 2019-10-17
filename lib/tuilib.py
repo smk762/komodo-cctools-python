@@ -45,6 +45,16 @@ def colorize(string, color):
         else:
                 return colors[color] + str(string) + '\033[0m'
 
+#TODO: check if pubkey is set  
+def kmd_rpc_connection_tui():
+    rpc_info = rpclib.get_rpc_details('KMD')
+    rpc_connection = rpclib.rpc_connect(rpc_info[0], rpc_info[1], int(rpc_info[2]))
+    try:
+        ac_name = rpc_connection.getinfo()['name']
+    except:
+        input("Connection failed! Is KMD running? Press [Enter] to continue...")
+        pass
+    return rpc_connection
 
 def rpc_connection_tui():
     # TODO: possible to save multiply entries from successfull sessions and ask user to choose then
@@ -523,55 +533,6 @@ def gateways_bind_tui(rpc_connection, token_id='', token_supply='', oracle_txid=
 # to have connection to KMD daemon and cache it in separate file
 
 
-def rpc_kmd_connection_tui():
-    while True:
-        restore_choice = input("Do you want to use KMD daemon connection details from previous session? [y/n]: ")
-        if restore_choice == "y":
-            try:
-                with open("connection_kmd.json", "r") as file:
-                    connection_json = json.load(file)
-                    rpc_user = connection_json["rpc_user"]
-                    rpc_password = connection_json["rpc_password"]
-                    rpc_port = connection_json["rpc_port"]
-                    rpc_connection_kmd = rpclib.rpc_connect(rpc_user, rpc_password, int(rpc_port))
-                    try:
-                        print(rpc_connection_kmd.getinfo())
-                        print(colorize("Successfully connected!\n", "green"))
-                        input("Press [Enter] to continue...")
-                        break
-                    except Exception as e:
-                        print(e)
-                        print(colorize("NOT CONNECTED!\n", "red"))
-                        input("Press [Enter] to continue...")
-                        break
-            except FileNotFoundError:
-                print(colorize("You do not have cached KMD daemon connection details."
-                               " Please select n for connection setup", "red"))
-                input("Press [Enter] to continue...")
-        elif restore_choice == "n":
-            rpc_user = input("Input your rpc user: ")
-            rpc_password = input("Input your rpc password: ")
-            rpc_port = input("Input your rpc port: ")
-            connection_details = {"rpc_user": rpc_user,
-                                  "rpc_password": rpc_password,
-                                  "rpc_port": rpc_port}
-            connection_json = json.dumps(connection_details)
-            with open("connection_kmd.json", "w+") as file:
-                file.write(connection_json)
-            rpc_connection_kmd = rpclib.rpc_connect(rpc_user, rpc_password, int(rpc_port))
-            try:
-                print(rpc_connection_kmd.getinfo())
-                print(colorize("Successfully connected!\n", "green"))
-                input("Press [Enter] to continue...")
-                break
-            except Exception as e:
-                print(e)
-                print(colorize("NOT CONNECTED!\n", "red"))
-                input("Press [Enter] to continue...")
-                break
-        else:
-            print(colorize("Please input y or n", "red"))
-    return rpc_connection_kmd
 
 
 def z_sendmany_twoaddresses(rpc_connection, sendaddress, recepient1, amount1, recepient2, amount2):

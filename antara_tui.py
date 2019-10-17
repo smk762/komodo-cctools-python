@@ -170,27 +170,31 @@ common_submenu_options = [
     {"Exit TUI": tuilib.exit}
 ]
 
-def get_rpc_status(menu, rpc_connection='', kmd_rpc_connection=''):
+def get_rpc_status(menu, rpc_connection='', rpc_connection_kmd=''):
     add_to_menu = []
-    try: 
-        ac_name = rpc_connection.getinfo()['name']
-        ac_rpc_status = tuilib.colorize("[Connected to "+ac_name+"]", 'green')
-        add_to_menu.append({"Check connection to Smartchain": tuilib.getinfo_tui})
-    except:
-        ac_rpc_status = tuilib.colorize("[Not connected to Smartchain]", 'red')
-        add_to_menu.append({"Connect to Smartchain": tuilib.rpc_connection_tui})
-        pass 
-    if menu['name'] in ['Payments', 'Oracles']:
-        status_str = ac_rpc_status
-    else:
+    if menu['name'] not in ['Pegs create']:
+        try: 
+            ac_name = rpc_connection.getinfo()['name']
+            ac_rpc_status = tuilib.colorize("[Connected to "+ac_name+"]", 'green')
+            add_to_menu.append({"Check connection to Smartchain": tuilib.getinfo_tui})
+        except:
+            ac_rpc_status = tuilib.colorize("[Not connected to Smartchain]", 'red')
+            add_to_menu.append({"Connect to Smartchain": tuilib.rpc_connection_tui})
+            pass 
+    if menu['name'] not in ['Payments', 'Oracles']:
         try:
             ac_name = rpc_connection_kmd.getinfo()['name']
             kmd_rpc_status = tuilib.colorize("[Connected to KMD]", 'green')
             add_to_menu.append({"Check connection to KMD": tuilib.getinfo_tui})
-        except:
+        except Exception as e:
             kmd_rpc_status = tuilib.colorize("[Not connected to KMD]", 'red')
-            add_to_menu.append({"Connect to KMD daemon": tuilib.rpc_kmd_connection_tui})
+            add_to_menu.append({"Connect to KMD daemon": tuilib.kmd_rpc_connection_tui})
             pass
+    if menu['name'] in ['Payments', 'Oracles']:
+        status_str = ac_rpc_status
+    elif menu['name'] in ['Pegs create']:
+        status_str = kmd_rpc_status
+    else:
         status_str = kmd_rpc_status+"   "+ac_rpc_status
     if status_str.find('Not') > 0:
         menuItems = add_to_menu+common_submenu_options
