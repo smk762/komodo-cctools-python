@@ -339,6 +339,110 @@ def oracle_subscription_utxogen(rpc_connection, oracle_txid='', publisher_id='',
         input("Press [Enter] to continue...")
         break
 
+def export_oracles(source_chain):
+    print(colorize("Exporting "+str(source_chain)+" oracles", 'blue'))
+    oracles_archive = []
+    rpc[source_chain] = def_creds(source_chain)
+    oracles_list = rpc[source_chain].oracleslist()
+    for oracle_txid in oracles_list:
+        oracle_samples = []
+        oracle_data = {}
+        oracle_info = rpc[source_chain].oraclesinfo(oracle_txid)
+        reg_json=oracle_info['registered']
+        for reg_pub in reg_json:
+            if 'baton' in reg_pub:
+                baton = reg_pub['baton']
+                samples = rpc[source_chain].oraclessamples(oracle_txid, baton, str(100))
+                oracle_data.update({"name":oracle_info['name']})
+                oracle_data.update({"description":oracle_info['description']})
+                oracle_data.update({"format":oracle_info['format']})
+                if samples is not None:
+                    for sample in samples['samples']:
+                        oracle_samples.append(sample['data'][0])
+                oracle_data.update({"data":oracle_samples})
+                if oracle_info['name'].find("Spamtest") == -1 and oracle_info['name'].find("_recreated") == -1:
+                    print(colorize(oracle_info['name']+" oracle records retrieved.", 'green'))
+                    oracles_archive.append(oracle_data)
+            else:
+                print(colorize("EXPORT ERROR: Oracle baton does not exist.", 'red'))
+    return oracles_archive
+
+def import_oracles(dest_chain, oracles_archive):
+    rpc[dest_chain] = def_creds(dest_chain)
+    pubkey = rpc[dest_chain].getinfo()['pubkey']
+    print(colorize("Importing "+str(len(oracles_archive))+" oracles", 'blue'))
+    for entry in oracles_archive:
+        if entry['name'].find("Spamtest") == -1 and entry['name'].find("_recreated") == -1:
+            oracle_name = entry['name']
+            oracles_list = rpc[dest_chain].oracleslist()
+            created = False
+            for txid in oracles_list:
+                if oracle_name == rpc[dest_chain].oraclesinfo(txid)['name']:
+                    created = True
+                    oracle_txid = txid
+                    break
+            if not created:
+                oracle_txid = create_oracle(dest_chain, oracle_name, entry['description'], entry['format'])
+                i = 1
+                num_msg = len(entry['data'])
+                for msg in entry['data']:
+                    write2oracle(dest_chain, oracle_txid, msg)
+                    print(colorize(str(i)+" of "+str(num_msg)+" messages on "+oracle_name+" imported...", 'orange'))
+                    time.sleep(10)
+                    i += 1  
+            else:
+                print(colorize("Oracle ["+entry['name']+"] already created", 'blue'))
+                i = 1
+                num_msg = len(entry['data'])
+                num_samples = 0
+                oracle_info = rpc[dest_chain].oraclesinfo(oracle_txid)
+                reg_json=oracle_info['registered']
+                for reg_pub in reg_json:
+                    print("Publisher: "+reg_pub['publisher'])
+                    print("Pubkey: "+pubkey)
+                    if reg_pub['publisher'] == pubkey:
+                        if 'baton' in reg_pub:
+                            baton = reg_pub['baton']
+                            print(baton)
+                            samples = rpc[dest_chain].oraclessamples(oracle_txid, baton, str(100))
+                            print(samples)
+                            num_samples = len(samples['samples'])
+                            print(str(num_samples)+" samples already on "+dest_chain)
+                if len(entry['data']) > num_samples:
+                    num_msg = len(entry['data'])
+                    for msg in entry['data']:
+                        write2oracle(dest_chain, oracle_txid, msg)
+                        print(colorize(str(i)+" of "+str(num_msg)+" messages on "+oracle_name+" imported...", 'orange'))
+                        time.sleep(10)
+                        i += 1
+                else:
+                    print(colorize("Oracle ["+entry['name']+"] data already migrated created", 'blue'))  
+
+def migrate_oracles():
+    while True:
+        from_chain = select_ac("Select source chain: ")
+        rpc_info = rpclib.get_rpc_details(from_chain)
+        rpc_connection = rpclib.rpc_connect(rpc_info[0], rpc_info[1], int(rpc_info[2]))
+        try:
+            ac_name = rpc_connection.getinfo()['name']
+            break
+        except:
+            print("Connection failed! Is "+chain+" running?")
+            pass
+    while True:
+        to_chain = select_ac("Select destination chain: ", [from_chain])
+        rpc_info = rpclib.get_rpc_details(to_chain)
+        rpc_connection = rpclib.rpc_connect(rpc_info[0], rpc_info[1], int(rpc_info[2]))
+        try:
+            ac_name = rpc_connection.getinfo()['name']
+            break
+        except:
+            print("Connection failed! Is "+chain+" running?")
+            pass
+    oracles_archive = export_oracles(from_chain)
+    import_oracles(to_chain, oracles_archive)
+
+
 def gateways_bind_tui(rpc_connection, token_id='', token_supply='', oracle_txid='',
                      coin_name=''):
     # main loop with keyboard interrupt handling
@@ -2406,7 +2510,7 @@ def pegs_create_tui():
         paramlist.append("-earlytxid="+pegs_txid)
         print(colorize("The Pegs Contract has been created successfully!", 'green'))
         info = primary_rpc.gatewaysinfo(bind_txid)
-        while 'oracle_txid' not in info:
+        while 'oracletxid' not in info:
             time.sleep(30)
             print(colorize("Waiting for gateways bind to confirm...", 'orange'))
             info = primary_rpc.gatewaysinfo(bind_txid)
@@ -2415,7 +2519,7 @@ def pegs_create_tui():
             file.write('"Oraclefeed_Launch_Parameters":"'+oraclefeed_launch_str+'",\n')
             file.write('"Pegs_Creation_TXID":"'+str(pegs_txid)+'",\n')
             file.write('"Gateways_Bind_TXID":"'+str(bind_txid)+'",\n')
-            file.write('"Oracle_TXID":"'+str(info['oracle_txid'])+'",\n')
+            file.write('"Oracle_TXID":"'+str(info['oracletxid'])+'",\n')
             file.write('"Token_TXID":"'+str(info['tokenid'])+'",\n')
             file.write('"Coin":"'+str(info['coin'])+'",\n')
             file.write('"Pubkeys":"'+str(info['pubkeys'])+'",\n')
@@ -2731,25 +2835,32 @@ def validate_selection(interrogative, selection_list):
             print("Invalid selection, must be number between 1 and "+str(len(selection_list)))
             pass
 
-def select_ac():
+def select_ac(interrogative="Select Smart Chain: ", ignore_chains=[]):
+    ignore_list = ['notarisations', 'blocks', 'database', 'chainstate']+ignore_chains
     while True:
         dir_list = next(os.walk(home+"/.komodo"))[1]
         ac_list = []
         row = ''
         i = 1
         for folder in dir_list:
-            if folder not in ['notarisations', 'blocks', 'database', 'chainstate']:
+            if folder not in ignore_list:
                 ac_list.append(folder)
-                if i < 10:
-                    row += " ["+str(i)+"] "+'{:^14}'.format(folder)
-                else:
-                    row += "["+str(i)+"] "+'{:^14}'.format(folder)
-                if len(row) > 64:
-                    print(row)
-                    row = ''
-                i += 1
-        selection = validate_selection("Select Smart Chain: ", ac_list)
-        return selection
+        for folder in ac_list:    
+            if i < 10:
+                row += " ["+str(i)+"] "+'{:<14}'.format(folder)
+            else:
+                row += "["+str(i)+"] "+'{:<14}'.format(folder)
+            if len(row) > 64 or i == len(ac_list)-1:
+                print(row)
+                row = ''
+            i += 1
+        selection = validate_selection(interrogative, ac_list)
+        try:
+
+            return selection
+        except:
+            pass
+        
 
 def select_address(rpc_connection):
     list_address_groupings = rpc_connection.listaddressgroupings()
