@@ -200,7 +200,7 @@ def get_rpc_status(menu, rpc_connection='', rpc_connection_kmd=''):
         menuItems = add_to_menu+common_submenu_options
     else:
         menuItems = add_to_menu+menu['menu']+common_submenu_options
-    return status_str, menuItems
+    return status_str, menuItems, rpc_connection_kmd, rpc_connection
 
 
 main_menu_options = ["Oracles", "Gateways Creation", "Gateways Usage", "Pegs Creation", "Pegs Usage", "Payments"]
@@ -219,6 +219,8 @@ def submenu(menu, rpc_connection='', rpc_connection_kmd=''):
         print(tuilib.colorize(menu['header'], 'blue'))
         print(tuilib.colorize(menu['author'], 'green'))
         rpc_status = get_rpc_status(menu, rpc_connection, rpc_connection_kmd)
+        rpc_connection = rpc_status[3]
+        rpc_connection_kmd = rpc_status[2]
         print(rpc_status[0])
         menuItems = rpc_status[1]
         for item in menuItems:
@@ -228,9 +230,9 @@ def submenu(menu, rpc_connection='', rpc_connection_kmd=''):
             if int(choice) < 0:
                 raise ValueError
             if list(menuItems[int(choice)].keys())[0] == "Return to Antara modules menu":
-                submenu(antara)
+                submenu(antara,rpc_connection, rpc_connection_kmd)
             elif list(menuItems[int(choice)].keys())[0] in main_menu_options:
-                submenu(list(menuItems[int(choice)].values())[0])
+                submenu(list(menuItems[int(choice)].values())[0],rpc_connection, rpc_connection_kmd)
             elif list(menuItems[int(choice)].keys())[0] in no_param_options:
                 list(menuItems[int(choice)].values())[0]()
             elif list(menuItems[int(choice)].keys())[0] in docs_options:
