@@ -621,12 +621,15 @@ def gateways_deposit_tui(rpc_connection_assetchain, rpc_connection_komodo,
         gw_deposit_hex = rpclib.gateways_deposit(rpc_connection_assetchain, bind_txid, height, coin_name, \
                          coin_txid, claim_vout, deposit_hex, proof, dest_pub, amount)
         print("gw_deposit_hex: "+ str(gw_deposit_hex))
-        deposit_txid = rpclib.sendrawtransaction(rpc_connection_assetchain, gw_deposit_hex["hex"])
-        check_if_tx_in_mempool(rpc_connection_assetchain, deposit_txid)
-        print("Done! Gateways deposit txid is: " + deposit_txid + " Please not forget to claim your deposit!")
-        input("Press [Enter] to continue...")
-        return deposit_txid, dest_pub
-        
+        if 'hex' in gw_deposit_hex:
+            deposit_txid = rpclib.sendrawtransaction(rpc_connection_assetchain, gw_deposit_hex["hex"])
+            check_if_tx_in_mempool(rpc_connection_assetchain, deposit_txid)
+            print("Done! Gateways deposit txid is: " + deposit_txid + " Please not forget to claim your deposit!")
+            input("Press [Enter] to continue...")
+            return deposit_txid, dest_pub
+        elif 'error' in gw_deposit_hex:
+            print("GW Deposit Error: "+str(gw_deposit_hex['error']))
+
 def gateways_claim_tui(rpc_connection, bind_txid='', coin_name='', deposit_txid='',
                        dest_pub='', amount=''):
     while True:
