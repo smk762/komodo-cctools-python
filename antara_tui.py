@@ -206,8 +206,8 @@ def get_rpc_status(menu, rpc_connection='', rpc_connection_kmd=''):
 main_menu_options = ["Oracles", "Gateways Creation", "Gateways Usage", "Pegs Creation", "Pegs Usage", "Payments"]
 rpc_connect_options = ["Connect to KMD daemon", "Connect to Smartchain"]
 ac_rpc_options = ["Check connection to Smartchain"]
-kmd_rpc_options = ["Check connection to KMD", "Send KMD gateway deposit transaction", "Execute gateways deposit"]
-kmd_ac_rpc_options = ["Deposit KMD in Gateway and claim Tokens"]
+kmd_rpc_options = ["Check connection to KMD", "Send KMD gateway deposit transaction"]
+kmd_ac_rpc_options = ["Deposit KMD in Gateway and claim Tokens", "Execute gateways deposit"]
 no_param_options = ["Exit TUI", "Create a Pegs assetchain",
                     "Migrate oracles and data from one chain to another", "Return to Antara modules menu"]
 # TODO: add more readme docs
@@ -219,8 +219,6 @@ def submenu(menu, rpc_connection='', rpc_connection_kmd=''):
         print(tuilib.colorize(menu['header'], 'blue'))
         print(tuilib.colorize(menu['author'], 'green'))
         rpc_status = get_rpc_status(menu, rpc_connection, rpc_connection_kmd)
-        rpc_connection = rpc_status[3]
-        rpc_connection_kmd = rpc_status[2]
         print(rpc_status[0])
         menuItems = rpc_status[1]
         for item in menuItems:
@@ -245,10 +243,14 @@ def submenu(menu, rpc_connection='', rpc_connection_kmd=''):
             elif list(menuItems[int(choice)].keys())[0] in kmd_rpc_options:
                 while True:
                     try:
+                        #print(list(menuItems[int(choice)].values())[0])
+                        #print(rpc_connection_kmd)
                         list(menuItems[int(choice)].values())[0](rpc_connection_kmd)
                         break
                     except Exception as e:
+
                         print("Please connect to KMD daemon first!")
+                        input(e)
                         input("Press [Enter] to continue...")
                         break
             elif list(menuItems[int(choice)].keys())[0] in kmd_ac_rpc_options:
