@@ -601,7 +601,7 @@ def gateways_deposit_tui(rpc_connection_assetchain, rpc_connection_komodo,
             amount = input("Input amount of your deposit: ")
 
         raw_tx_info = rpc_connection_komodo.getrawtransaction(coin_txid, 1)
-        print(raw_tx_info)
+        print("raw_tx_info: "+str(raw_tx_info))
         height = raw_tx_info["height"]
         last_ntx_height = raw_tx_info['last_notarized_height']
         #while last_ntx_height < height:
@@ -612,13 +612,15 @@ def gateways_deposit_tui(rpc_connection_assetchain, rpc_connection_komodo,
             #height = raw_tx_info["height"]
             #last_ntx_height = raw_tx_info['last_notarized_height']
         deposit_hex = raw_tx_info["hex"]
-        print(deposit_hex)
+        print("deposit hex: "+ str(deposit_hex))
         claim_vout = "0"
         proof_sending_block = "[\"{}\"]".format(coin_txid)
+        print("proof_sending_block: "+ str(proof_sending_block))
         proof = rpc_connection_komodo.gettxoutproof(json.loads(proof_sending_block))
+        print("proof: "+ str(proof))
         gw_deposit_hex = rpclib.gateways_deposit(rpc_connection_assetchain, bind_txid, height, coin_name, \
                          coin_txid, claim_vout, deposit_hex, proof, dest_pub, amount)
-        print(gw_deposit_hex)
+        print("gw_deposit_hex: "+ str(gw_deposit_hex))
         deposit_txid = rpclib.sendrawtransaction(rpc_connection_assetchain, gw_deposit_hex["hex"])
         check_if_tx_in_mempool(rpc_connection_assetchain, deposit_txid)
         print("Done! Gateways deposit txid is: " + deposit_txid + " Please not forget to claim your deposit!")
@@ -2186,9 +2188,6 @@ def gateways_deposit_claim_tokens(rpc_connection_assetchain, rpc_connection_komo
                  deposit_txid, dest_pub, gw_deposit_amount)
     tokenbalance = rpc_connection_assetchain.tokenbalance(gw_info['tokenid'])
     print("Gateway transfer complete!")
-    print(colorize("Deposit TXID         ["+str(bind_txid)+"]", 'green'))
-    print(colorize("Claim TXID           ["+str(bind_txid)+"]", 'green'))
-    print(colorize("Token Balance        ["+str(bind_txid)+"]", 'green'))
 
 
 

@@ -248,8 +248,7 @@ def submenu(menu, rpc_connection='', rpc_connection_kmd=''):
                         list(menuItems[int(choice)].values())[0](rpc_connection_kmd)
                         break
                     except Exception as e:
-
-                        print("Please connect to KMD daemon first!")
+                        print("Something went wrong with "+str(list(menuItems[int(choice)].values())[0]))
                         input(e)
                         input("Press [Enter] to continue...")
                         break
@@ -259,8 +258,8 @@ def submenu(menu, rpc_connection='', rpc_connection_kmd=''):
                         list(menuItems[int(choice)].values())[0](rpc_connection, rpc_connection_kmd)
                         break
                     except Exception as e:
+                        print("Something went wrong with "+str(list(menuItems[int(choice)].values())[0]))
                         print(e)
-                        print("Please connect to KMD/AC daemon first!")
                         input("Press [Enter] to continue...")
                         break
             else:
