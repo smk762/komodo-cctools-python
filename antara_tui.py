@@ -121,7 +121,7 @@ gw_use['menu'] = [
     {"Execute gateways claim": tuilib.gateways_claim_tui},
     {"Execute gateways withdrawal": tuilib.gateways_withdrawal_tui}
 ]
-gw_use['author'] = 'Welcome to the Gateways Creation TUI!\nCLI version 0.2 by Anton Lysakov & Thorn Mennet\n'
+gw_use['author'] = 'Welcome to the Gateways Usage TUI!\nCLI version 0.2 by Anton Lysakov & Thorn Mennet\n'
 
 payments = {}
 payments['name'] = 'Payments'

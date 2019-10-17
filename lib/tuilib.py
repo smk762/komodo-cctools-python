@@ -599,23 +599,27 @@ def gateways_deposit_tui(rpc_connection_assetchain, rpc_connection_komodo,
             dest_pub = input("Input pubkey of gateways deposit recipient address ("+recipient_addr+"): ")
         if amount == '':
             amount = input("Input amount of your deposit: ")
+
         raw_tx_info = rpc_connection_komodo.getrawtransaction(coin_txid, 1)
+        print(raw_tx_info)
         height = raw_tx_info["height"]
         last_ntx_height = raw_tx_info['last_notarized_height']
-        while last_ntx_height < height:
-            print("Waiting 60 sec for deposit txid to be notarized...")
-            print("Deposit txid height ["+str(height)+"] vs last notarization height ["+str(last_ntx_height)+"]")
-            time.sleep(60)
-            raw_tx_info = rpc_connection_komodo.getrawtransaction(coin_txid, 1)
-            height = raw_tx_info["height"]
-            last_ntx_height = raw_tx_info['last_notarized_height']
+        #while last_ntx_height < height:
+         #   print("Waiting 60 sec for deposit txid to be notarized...")
+          #  print("Deposit txid height ["+str(height)+"] vs last notarization height ["+str(last_ntx_height)+"]")
+           # time.sleep(60)
+            #raw_tx_info = rpc_connection_komodo.getrawtransaction(coin_txid, 1)
+            #height = raw_tx_info["height"]
+            #last_ntx_height = raw_tx_info['last_notarized_height']
         deposit_hex = raw_tx_info["hex"]
+        print(deposit_hex)
         claim_vout = "0"
         proof_sending_block = "[\"{}\"]".format(coin_txid)
         proof = rpc_connection_komodo.gettxoutproof(json.loads(proof_sending_block))
-        deposit_hex = rpclib.gateways_deposit(rpc_connection_assetchain, bind_txid, height, coin_name, \
+        gw_deposit_hex = rpclib.gateways_deposit(rpc_connection_assetchain, bind_txid, height, coin_name, \
                          coin_txid, claim_vout, deposit_hex, proof, dest_pub, amount)
-        deposit_txid = rpclib.sendrawtransaction(rpc_connection_assetchain, deposit_hex["hex"])
+        print(gw_deposit_hex)
+        deposit_txid = rpclib.sendrawtransaction(rpc_connection_assetchain, gw_deposit_hex["hex"])
         check_if_tx_in_mempool(rpc_connection_assetchain, deposit_txid)
         print("Done! Gateways deposit txid is: " + deposit_txid + " Please not forget to claim your deposit!")
         input("Press [Enter] to continue...")
@@ -2148,7 +2152,7 @@ def gateway_info_tui(rpc_connection, gw_index=''):
     try:    
         info = rpc_connection.gatewaysinfo(bind_txid)
         print(colorize("Gateways Bind TXID         ["+str(bind_txid)+"]", 'green'))
-        print(colorize("Gateways Oracle TXID       ["+str(info['oracle_txid'])+"]", 'green'))
+        print(colorize("Gateways Oracle TXID       ["+str(info['oracletxid'])+"]", 'green'))
         print(colorize("Gateways Token TXID        ["+str(info['tokenid'])+"]", 'green'))
         print(colorize("Gateways Coin              ["+str(info['coin'])+"]", 'green'))
         print(colorize("Gateways Pubkeys           ["+str(info['pubkeys'])+"]", 'green'))
@@ -2489,7 +2493,7 @@ def pegs_create_tui():
         print("Pegs Launch Parameters: "+' '.join(paramlist))
         print("Pegs Creation TXID         ["+str(bind_txid)+"]")
         print("Gateways Bind TXID         ["+str(bind_txid)+"]")
-        print("Oracle TXID                ["+str(info['oracle_txid'])+"]")
+        print("Oracle TXID                ["+str(info['oracletxid'])+"]")
         print("Token TXID                 ["+str(info['tokenid'])+"]")
         print("Coin                       ["+str(info['coin'])+"]")
         print("Pubkeys                    ["+str(info['pubkeys'])+"]")
