@@ -50,7 +50,17 @@ def kmd_rpc_connection_tui():
     rpc_info = rpclib.get_rpc_details('KMD')
     rpc_connection = rpclib.rpc_connect(rpc_info[0], rpc_info[1], int(rpc_info[2]))
     try:
-        ac_name = rpc_connection.getinfo()['name']
+        info = rpclib.getinfo(rpc_connection)
+        chain = info['name']
+        if "pubkey" in info.keys():
+            print("Pubkey is already set")
+        else:
+            valid_address = rpc_connection.getaccountaddress("")
+            print(valid_address)
+            valid_pubkey = rpc_connection.validateaddress(valid_address)["pubkey"]
+            print(valid_pubkey)
+            rpc_connection.setpubkey(valid_pubkey)
+            print(tuilib.colorize("Pubkey is succesfully set!", "green"))
     except:
         input("Connection failed! Is KMD running? Press [Enter] to continue...")
         pass
@@ -70,7 +80,17 @@ def rpc_connection_tui():
                     rpc_port = connection_json["rpc_port"]
                     rpc_connection = rpclib.rpc_connect(rpc_user, rpc_password, int(rpc_port))
                 try:
-                    ac_name = rpc_connection.getinfo()['name']
+                    info = rpclib.getinfo(rpc_connection)
+                    chain = info['name']
+                    if "pubkey" in info.keys():
+                        print("Pubkey is already set")
+                    else:
+                        valid_address = rpc_connection.getaccountaddress("")
+                        print(valid_address)
+                        valid_pubkey = rpc_connection.validateaddress(valid_address)["pubkey"]
+                        print(valid_pubkey)
+                        rpc_connection.setpubkey(valid_pubkey)
+                        print(tuilib.colorize("Pubkey is succesfully set!", "green"))
                     break
                 except:
                     print("Connection failed! Is "+chain+" running?")
@@ -588,12 +608,12 @@ def operationstatus_to_txid(rpc_connection, zstatus):
 
 def gateways_send_kmd(rpc_connection_assetchain, rpc_connection, gw_deposit_addr=''):
     # TODO: have to handle CTRL+C on text input
+    gateway_info_tui(rpc_connection_assetchain)
     print(colorize("Please be carefull when input wallet addresses and amounts since all transactions doing in real KMD!", "magenta"))
     print("Your addresses with balances: ")
     sendaddress = select_address(rpc_connection)
     amount1 = 0.0001
     while True:
-        gateway_info_tui(rpc_connection_assetchain)
         if gw_deposit_addr == '':
             gw_deposit_addr = input("Input gateway deposit address: ")
         valid = rpc_connection.validateaddress(gw_deposit_addr)['isvalid']
@@ -636,8 +656,7 @@ def gateways_send_kmd(rpc_connection_assetchain, rpc_connection, gw_deposit_addr
 # TODO: autoget some info if possible.
 def gateways_deposit_tui(rpc_connection_assetchain, rpc_connection_komodo,
                         bind_txid='', coin_name='', coin_txid='', amount='',
-                        recipient_addr=''):
-    
+                        recipient_addr=''):    
     try:
         with open("gw_deposit.json", "r") as file:
             gw_deposit_json = json.load(file)
@@ -663,10 +682,33 @@ def gateways_deposit_tui(rpc_connection_assetchain, rpc_connection_komodo,
             amount = input("Input amount of your deposit: ")
 
         raw_tx_info = rpc_connection_komodo.getrawtransaction(coin_txid, 1)
-        print("raw_tx_info: "+str(raw_tx_info))
+        print(colorize("[raw_tx_info]",'blue'))
+        print(raw_tx_info)
         height = raw_tx_info["height"]
-        last_ntx_height = raw_tx_info['last_notarized_height']
-        #while last_ntx_height < height:
+        # check if oracle contains sample in block > height
+        oracle_txid = rpc_connection_assetchain.gatewaysinfo(bind_txid)['oracletxid']
+        oracle_info = rpc_connection_assetchain.oraclesinfo(oracle_txid)
+        print(colorize("[oracle_info]",'blue'))
+        print(oracle_info)
+        if 'registered' in oracle_info:
+            baton = oracle_info['registered'][0]['baton']
+        else:
+            print(colorize("Oracle not registered. Lets do it now...",'red'))
+            oracle_register_tui(rpc_connection_assetchain, oracle_txid)
+            oracle_subscription_utxogen(rpc_connection_assetchain, oracle_txid)
+        while True:
+            print("Waiting 60 sec for deposit txid to be passed in oracle...")
+            samples = rpc_connection_assetchain.oraclessamples(oracle_txid, baton, str(5))
+            print("Checking last "+str(len(samples['samples']))+" samples")
+            for sample in samples['samples']:
+                print(colorize("[sample data]",'blue'))
+                print(sample['data'])
+                sample_height = int(sample['data'][0])
+                print(colorize("[sample_height data]",'blue'))
+                print(sample['data'][0])
+                if sample_height > height:
+                    print(colorize("deposit txid height passed in oracle sample at height "+str(sample_height),'green'))
+                    break
          #   print("Waiting 60 sec for deposit txid to be notarized...")
           #  print("Deposit txid height ["+str(height)+"] vs last notarization height ["+str(last_ntx_height)+"]")
            # time.sleep(60)
@@ -674,15 +716,19 @@ def gateways_deposit_tui(rpc_connection_assetchain, rpc_connection_komodo,
             #height = raw_tx_info["height"]
             #last_ntx_height = raw_tx_info['last_notarized_height']
         deposit_hex = raw_tx_info["hex"]
-        print("deposit hex: "+ str(deposit_hex))
+        print(colorize("[deposit hex]",'blue'))
+        print(deposit_hex)
         claim_vout = "0"
         proof_sending_block = "[\"{}\"]".format(coin_txid)
-        print("proof_sending_block: "+ str(proof_sending_block))
+        print(colorize("[proof_sending_block]",'blue'))
+        print(proof_sending_block)
         proof = rpc_connection_komodo.gettxoutproof(json.loads(proof_sending_block))
-        print("proof: "+ str(proof))
+        print(colorize("[proof]",'blue'))
+        print(proof)
         gw_deposit_hex = rpclib.gateways_deposit(rpc_connection_assetchain, bind_txid, height, coin_name, \
                          coin_txid, claim_vout, deposit_hex, proof, dest_pub, amount)
-        print("gw_deposit_hex: "+ str(gw_deposit_hex))
+        print(colorize("[gw_deposit_hex]",'blue'))
+        print(gw_deposit_hex)
         if 'hex' in gw_deposit_hex:
             deposit_txid = rpclib.sendrawtransaction(rpc_connection_assetchain, gw_deposit_hex["hex"])
             check_if_tx_in_mempool(rpc_connection_assetchain, deposit_txid)
@@ -690,7 +736,12 @@ def gateways_deposit_tui(rpc_connection_assetchain, rpc_connection_komodo,
             input("Press [Enter] to continue...")
             return deposit_txid, dest_pub
         elif 'error' in gw_deposit_hex:
-            print(colorize("GW Deposit Error: "+str(gw_deposit_hex['error']), 'red'))
+            print(colorize("GW Deposit Error: \n"+str(gw_deposit_hex['error']), 'red'))
+        else:
+            print(colorize("[GW Deposit Error (no msg)]\n "+str(gw_deposit_hex), 'red'))
+        input("Press [Enter] to continue...")
+        return
+
 
 def gateways_claim_tui(rpc_connection, bind_txid='', coin_name='', deposit_txid='',
                        dest_pub='', amount=''):
