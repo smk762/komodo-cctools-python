@@ -660,9 +660,26 @@ def gateways_deposit_tui(rpc_connection_assetchain, rpc_connection_komodo,
     try:
         with open("gw_deposit.json", "r") as file:
             gw_deposit_json = json.load(file)
-            coin_txid = gw_deposit_json["gw_sendmany_txid"]
-            recipient_addr = gw_deposit_json["gw_recipient_addr"]
-            amount = gw_deposit_json["gw_deposit_amount"]
+            json_coin_txid = gw_deposit_json["gw_sendmany_txid"]
+            json_recipient_addr = gw_deposit_json["gw_recipient_addr"]
+            json_amount = gw_deposit_json["gw_deposit_amount"]
+        print(colorize("gw_deposit.json file found, please confirm values below...", 'green'))
+        print(colorize("Coin (deposit) txid: "+json_coin_txid, 'blue'))
+        print(colorize("Recipient address: "+json_recipient_addr, 'blue'))
+        print(colorize("Amount: "+str(json_amount), 'blue'))
+        while True:
+            userinput = input(colorize("\nPress [A] to accept these values, or [M] to enter manually\n", "orange"))
+            if userinput == 'a' or userinput == 'A':
+                coin_txid = json_coin_txid
+                recipient_addr = json_recipient_addr
+                amount = json_amount
+                break
+            if userinput == 'm' or userinput == 'M':
+                break
+            else:
+                print(colorize("Enter [A/a] or [M/m] only! Try again...","red"))
+                pass
+
     except FileNotFoundError:
         print("No gw_deposit.json file found, please enter inputs manually...")
         pass
@@ -696,8 +713,9 @@ def gateways_deposit_tui(rpc_connection_assetchain, rpc_connection_komodo,
             print(colorize("Oracle not registered. Lets do it now...",'red'))
             oracle_register_tui(rpc_connection_assetchain, oracle_txid)
             oracle_subscription_utxogen(rpc_connection_assetchain, oracle_txid)
+        passed = False
         while True:
-            print("Waiting 60 sec for deposit txid to be passed in oracle...")
+            print("Waiting 60 sec for deposit txid height ["+str(height)+"] to be passed in oracle...")
             samples = rpc_connection_assetchain.oraclessamples(oracle_txid, baton, str(5))
             print("Checking last "+str(len(samples['samples']))+" samples")
             for sample in samples['samples']:
@@ -708,7 +726,12 @@ def gateways_deposit_tui(rpc_connection_assetchain, rpc_connection_komodo,
                 print(sample['data'][0])
                 if sample_height > height:
                     print(colorize("deposit txid height passed in oracle sample at height "+str(sample_height),'green'))
+                    passed = True
                     break
+            if passed:
+                break
+            time.sleep(60)
+
          #   print("Waiting 60 sec for deposit txid to be notarized...")
           #  print("Deposit txid height ["+str(height)+"] vs last notarization height ["+str(last_ntx_height)+"]")
            # time.sleep(60)
