@@ -452,7 +452,43 @@ def migrate_oracles():
     oracles_archive = export_oracles(from_chain)
     import_oracles(to_chain, oracles_archive)
 
+def gw_oracle_token_create_tui(rpc_connection, name='', supply='', description=''):
+    while True:
+        try:
+            if name == '':
+                name = input("Set your token name (should match external coin ticker. E.g. KMD): ")
+            if supply == '':
+                supply = input("Set your token supply: ")
+            if description == '':
+                description = input("Set your token description: ")
+        except KeyboardInterrupt:
+            break
+        try:
+            token_txid = token_create_tui(rpc_connection, name, supply, description)
+            oracle_txid = oracle_create_tui(rpc_connection, name, description, 'Ihh')
+            return token_txid, oracle_txid
+        except Exception as e:
+            print(colorize("Something went wrong in gw_oracle_token_create_tui", 'red'))
+            print(e)
+            pass
 
+def find_oracle_matching_token(rpc_connection, token_name):
+    match = False
+    print(colorize("Searching for a matching oracle named "+token_name+"...", 'green'))
+    for oracle_txid in rpc_connection.oracleslist():
+        name = rpclib.oracles_info(rpc_connection, oracle_txid)
+        if name == token_name:
+            print(colorize("Matching oracle txid ["+oracle_txid+"] found!", 'green'))
+            match = True
+    if not match:
+        print(colorize("No matching oracle found! Lets create one...", 'red'))
+        oracle_txid = oracle_create_tui(rpc_connection, token_name, token_name+"_tether", 'Ihh')
+        print(colorize("Dont forget to register and subscribe to the oracle with txid ["+oracle_txid+"]!", 'orange'))
+        input(colorize("Press [Enter] to continue...", 'orange'))
+    return oracle_txid
+
+
+# TODO: simplify oracle selection, where tokenname and oraclename are same.
 def gateways_bind_tui(rpc_connection, token_id='', token_supply='', oracle_txid='',
                      coin_name=''):
     # main loop with keyboard interrupt handling
@@ -463,6 +499,8 @@ def gateways_bind_tui(rpc_connection, token_id='', token_supply='', oracle_txid=
                     token_id = select_tokenid(rpc_connection)                
                 try:
                     token_name = rpclib.token_info(rpc_connection, token_id)["name"]
+                    coin_name = token_name
+                    oracle_txid = find_oracle_matching_token(rpc_connection, token_name)
                 except KeyError:
                     print(colorize("Not valid tokenid. Please try again.", "red"))
                     input("Press [Enter] to continue...")
@@ -484,6 +522,8 @@ def gateways_bind_tui(rpc_connection, token_id='', token_supply='', oracle_txid=
                         break
                     else:
                         print(colorize("Token name, oracle name and external coin ticker should match!", "red"))
+                        input("Press [Enter] to continue.")
+                        break
                 while True:
                     M = input("Input minimal amount of pubkeys needed for transaction confirmation (1 for non-multisig gw): ")
                     N = input("Input maximal amount of pubkeys needed for transaction confirmation (1 for non-multisig gw): ")
@@ -529,12 +569,6 @@ def gateways_bind_tui(rpc_connection, token_id='', token_supply='', oracle_txid=
         except KeyboardInterrupt:
             break
 
-# temporary :trollface: custom connection function solution
-# to have connection to KMD daemon and cache it in separate file
-
-
-
-
 def z_sendmany_twoaddresses(rpc_connection, sendaddress, recepient1, amount1, recepient2, amount2):
     str_sending_block = "[{{\"address\":\"{}\",\"amount\":{}}},{{\"address\":\"{}\",\"amount\":{}}}]".format(recepient1, amount1, recepient2, amount2)
     sending_block = json.loads(str_sending_block)
@@ -552,17 +586,27 @@ def operationstatus_to_txid(rpc_connection, zstatus):
     return txid
 
 
-def gateways_send_kmd(rpc_connection, gw_deposit_addr=''):
+def gateways_send_kmd(rpc_connection_assetchain, rpc_connection, gw_deposit_addr=''):
     # TODO: have to handle CTRL+C on text input
     print(colorize("Please be carefull when input wallet addresses and amounts since all transactions doing in real KMD!", "magenta"))
     print("Your addresses with balances: ")
     sendaddress = select_address(rpc_connection)
     amount1 = 0.0001
-    if gw_deposit_addr == '':
-       gw_deposit_addr = input("Input gateway deposit address: ")
+    while True:
+        gateway_info_tui(rpc_connection_assetchain)
+        if gw_deposit_addr == '':
+            gw_deposit_addr = input("Input gateway deposit address: ")
+        valid = rpc_connection.validateaddress(gw_deposit_addr)['isvalid']
+        if not valid:
+            print("Address is not valid! Try again.")
+        else:
+            break
     while True:
         gw_recipient_addr = input("Input Gateway recipient address (linked to pubkey which will receive tokens): ")
-        if gw_deposit_addr == gw_recipient_addr:
+        valid = rpc_connection.validateaddress(gw_recipient_addr)['isvalid']
+        if not valid:
+            print("Address is not valid! Try again.")
+        elif gw_deposit_addr == gw_recipient_addr:
             print("Gateway recipient address must be different to Gateway address! Try again.")
         else:
             break
@@ -578,16 +622,34 @@ def gateways_send_kmd(rpc_connection, gw_deposit_addr=''):
     file.writelines(gw_sendmany_txid + "\n")
     file.close()
     check_if_tx_in_mempool(rpc_connection, gw_sendmany_txid)
-    print(colorize("KMD Transaction ID: " + str(gw_sendmany_txid) + " Entry added to deposits_list file", "green"))
+    gw_deposit_details = {"gw_sendmany_txid": gw_sendmany_txid,
+                       "gw_recipient_addr": gw_recipient_addr,
+                       "gw_deposit_amount": gw_deposit_amount}
+    gw_deposit_json = json.dumps(gw_deposit_details)
+    with open("gw_deposit.json", "w+") as file:
+        file.write(gw_deposit_json)
+    print(colorize("KMD Transaction ID: " + str(gw_sendmany_txid) + " Entry added to gw_deposit.json", "green"))
+
     input("Press [Enter] to continue...")
     return gw_sendmany_txid, gw_recipient_addr, gw_deposit_amount
 
-
+# TODO: autoget some info if possible.
 def gateways_deposit_tui(rpc_connection_assetchain, rpc_connection_komodo,
                         bind_txid='', coin_name='', coin_txid='', amount='',
                         recipient_addr=''):
+    
+    try:
+        with open("gw_deposit.json", "r") as file:
+            gw_deposit_json = json.load(file)
+            coin_txid = gw_deposit_json["gw_sendmany_txid"]
+            recipient_addr = gw_deposit_json["gw_recipient_addr"]
+            amount = gw_deposit_json["gw_deposit_amount"]
+    except FileNotFoundError:
+        print("No gw_deposit.json file found, please enter inputs manually...")
+        pass
     while True:
         if bind_txid == '':
+            gateway_info_tui(rpc_connection_assetchain)
             bind_txid = input("Input your gateway bind txid: ")
         if coin_name == '':
             coin_name = input("Input your external coin ticker (e.g. KMD): ")
@@ -628,7 +690,7 @@ def gateways_deposit_tui(rpc_connection_assetchain, rpc_connection_komodo,
             input("Press [Enter] to continue...")
             return deposit_txid, dest_pub
         elif 'error' in gw_deposit_hex:
-            print("GW Deposit Error: "+str(gw_deposit_hex['error']))
+            print(colorize("GW Deposit Error: "+str(gw_deposit_hex['error']), 'red'))
 
 def gateways_claim_tui(rpc_connection, bind_txid='', coin_name='', deposit_txid='',
                        dest_pub='', amount=''):
@@ -690,10 +752,10 @@ def print_mempool(rpc_connection):
         print("Total: " + str(tx_counter) + " transactions\n")
         print("R + Enter to refresh list. E + Enter to exit menu." + "\n")
         is_refresh = input("Choose your destiny: ")
-        if is_refresh == "R":
+        if is_refresh == "R" or is_refresh == "r":
             print("\n")
             pass
-        elif is_refresh == "E":
+        elif is_refresh == "E" or is_refresh == "e":
             print("\n")
             break
         else:
@@ -2124,12 +2186,13 @@ def check_if_tx_in_mempool(rpc_connection, txid):
 def gateway_info_tui(rpc_connection, gw_index=''):
     if gw_index == '':
         while True:
-            print(colorize("\nGateways created on this assetchain: \n", "blue"))
+            ac_name = rpc_connection.getinfo()['name']
+            print(colorize("\nGateways created on "+ac_name+": \n", "blue"))
             gateways_list = rpc_connection.gatewayslist()
             if len(gateways_list) == 0:
                 print("Seems like a no gateways created on this assetchain yet!\n")
                 input("Press [Enter] to continue...")
-                break
+                return
             else:
                 i = 1
                 for gateway in gateways_list:
@@ -2178,7 +2241,7 @@ def gateways_deposit_claim_tokens(rpc_connection_assetchain, rpc_connection_komo
     gateways_list = rpc_connection_assetchain.gatewayslist()
     bind_txid = gateways_list[selected_gateway]
     gw_info = rpc_connection_assetchain.gatewaysinfo(bind_txid)
-    gw_sendmany = gateways_send_kmd(rpc_connection_komodo, gw_info['deposit'])
+    gw_sendmany = gateways_send_kmd(rpc_connection_assetchain, rpc_connection_komodo, gw_info['deposit'])
     gw_sendmany_txid = gw_sendmany[0]
     gw_recipient_addr = gw_sendmany[1]
     gw_deposit_amount = gw_sendmany[2]
@@ -2992,7 +3055,7 @@ def select_oracle_publisher(rpc_connection, oracle_txid):
         return 'back to menu'
     i = 1
     header = "|"+'{:^5}'.format("[#]")+"|" \
-            +'{:^68}'.format("PUBLISHER (green = your pubkey")+"|" \
+            +'{:^68}'.format("PUBLISHER (green = your pubkey)")+"|" \
             +'{:^36}'.format("BATON ADDRESS")+"|" \
             +'{:^14}'.format("FUNDS")+"|" \
             +'{:^14}'.format("DATAFEE")+"|" 
@@ -3018,6 +3081,7 @@ def select_oracle_publisher(rpc_connection, oracle_txid):
                     +'{:^14}'.format(str(publisher['datafee'])[:12])+"|" 
             print(colorize(" "+row, "blue"))
         i +=1
+    print(" "+table_dash)
     selected = validate_selection("Select Oracle Publisher to subscribe to: ", publisher_list)
     return selected
 

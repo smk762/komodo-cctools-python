@@ -92,8 +92,7 @@ gw_create['header'] = "\
 
 gw_create['menu'] = [
     {"Check mempool": tuilib.print_mempool},
-    {"Create token": tuilib.token_create_tui},
-    {"Create oracle": tuilib.oracle_create_tui},
+    {"Create token and oracle for gateway": tuilib.gw_oracle_token_create_tui},
     {"Register as publisher for oracle": tuilib.oracle_register_tui},
     {"Subscribe on oracle (+UTXO generator)": tuilib.oracle_subscription_utxogen},
     {"Bind Gateway": tuilib.gateways_bind_tui},
@@ -191,12 +190,15 @@ def get_rpc_status(menu, rpc_connection='', rpc_connection_kmd=''):
             add_to_menu.append({"Connect to KMD daemon": tuilib.kmd_rpc_connection_tui})
             pass
     if menu['name'] in ['Payments', 'Oracles']:
-        status_str = ac_rpc_status
+        status_str = ac_rpc_status+"\n"
     elif menu['name'] in ['Pegs create']:
-        status_str = kmd_rpc_status
+        status_str = kmd_rpc_status+"\n"
     else:
-        status_str = kmd_rpc_status+"   "+ac_rpc_status
-    if status_str.find('Not') > 0:
+        status_str = kmd_rpc_status+"   "+ac_rpc_status+"\n"
+    if menu['name'] == 'Antara':
+        status_str =  tuilib.colorize("[Select an Antara Module TUI]\n", 'orange')
+        menuItems = menu['menu']+common_submenu_options
+    elif status_str.find('Not') > 0:
         menuItems = add_to_menu+common_submenu_options
     else:
         menuItems = add_to_menu+menu['menu']+common_submenu_options
@@ -206,8 +208,8 @@ def get_rpc_status(menu, rpc_connection='', rpc_connection_kmd=''):
 main_menu_options = ["Oracles", "Gateways Creation", "Gateways Usage", "Pegs Creation", "Pegs Usage", "Payments"]
 rpc_connect_options = ["Connect to KMD daemon", "Connect to Smartchain"]
 ac_rpc_options = ["Check connection to Smartchain"]
-kmd_rpc_options = ["Check connection to KMD", "Send KMD gateway deposit transaction"]
-kmd_ac_rpc_options = ["Deposit KMD in Gateway and claim Tokens", "Execute gateways deposit"]
+kmd_rpc_options = ["Check connection to KMD"]
+kmd_ac_rpc_options = ["Deposit KMD in Gateway and claim Tokens", "Execute gateways deposit", "Send KMD gateway deposit transaction"]
 no_param_options = ["Exit TUI", "Create a Pegs assetchain",
                     "Migrate oracles and data from one chain to another", "Return to Antara modules menu"]
 # TODO: add more readme docs
