@@ -3,7 +3,25 @@ import os
 import http
 import platform
 from slickrpc import Proxy
+import bitcoin
+from bitcoin.wallet import P2PKHBitcoinAddress
+from bitcoin.core import x
+from bitcoin.core import CoreMainParams
 
+class CoinParams(CoreMainParams):
+    MESSAGE_START = b'\x24\xe9\x27\x64'
+    DEFAULT_PORT = 7770
+    BASE58_PREFIXES = {'PUBKEY_ADDR': 60,
+                       'SCRIPT_ADDR': 85,
+                       'SECRET_KEY': 188}
+bitcoin.params = CoinParams
+
+def get_radd_from_pub(pub):
+    try:
+        radd = str(P2PKHBitcoinAddress.from_pubkey(x(pub)))
+    except:
+        radd = pub
+    return str(radd)
 
 # RPC connection
 def get_rpc_details(chain):

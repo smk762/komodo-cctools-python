@@ -4,8 +4,12 @@ connection.json
 kmd_connection.json
 oracles_list
 tokens_list
+gateways_list
 deposits_list
 __pycache__/
 *_7776
 *.log
-
+/pegsinfo
+/old
+/oraclefeed_logs
+/gw_deposits
