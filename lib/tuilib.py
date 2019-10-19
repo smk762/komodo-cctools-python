@@ -6,6 +6,7 @@ import sys
 import pickle
 import platform
 import os
+import requests
 import subprocess
 import signal
 from slickrpc import Proxy
@@ -159,7 +160,7 @@ def getinfo_tui(rpc_connection):
     if isinstance(info_raw, dict):
         for key in info_raw:
             print("{}: {}".format(key, info_raw[key]))
-        input("Press [Enter] to continue...")
+        input(colorize("Press [Enter] to continue...", 'orange'))
     else:
         print("Error!\n")
         print(info_raw)
@@ -183,7 +184,7 @@ def token_create_tui(rpc_connection, name='', supply='', description=''):
             print(colorize("\nSomething went wrong!\n", "magenta"))
             print(token_hex)
             print("\n")
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
             break
         else:
             try:
@@ -192,7 +193,7 @@ def token_create_tui(rpc_connection, name='', supply='', description=''):
             except KeyError:
                 print(token_txid)
                 print("Error")
-                input("Press [Enter] to continue...")
+                input(colorize("Press [Enter] to continue...", 'orange'))
                 break
             finally:
                 print(colorize("Token creation transaction broadcasted: " + token_txid, "green"))
@@ -200,7 +201,7 @@ def token_create_tui(rpc_connection, name='', supply='', description=''):
                 file.writelines(token_txid + "\n")
                 file.close()
                 print(colorize("Entry added to tokens_list file!\n", "green"))
-                input("Press [Enter] to continue...")
+                input(colorize("Press [Enter] to continue...", 'orange'))
                 return token_txid
 
 
@@ -209,7 +210,7 @@ def oracles_info(rpc_connection):
     if oracle_txid != 'back to menu':
         info = rpc_connection.oraclesinfo(oracle_txid)
         print(info)
-        input("Press [Enter] to continue...")
+        input(colorize("Press [Enter] to continue...", 'orange'))
 
 
 def oracle_create_tui(rpc_connection, name='', description='', oracle_data_type=''):
@@ -229,7 +230,7 @@ def oracle_create_tui(rpc_connection, name='', description='', oracle_data_type=
             print(colorize("\nSomething went wrong!\n", "magenta"))
             print(oracle_hex)
             print("\n")
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
             break
         else:
             try:
@@ -237,7 +238,7 @@ def oracle_create_tui(rpc_connection, name='', description='', oracle_data_type=
             except KeyError:
                 print(oracle_txid)
                 print("Error")
-                input("Press [Enter] to continue...")
+                input(colorize("Press [Enter] to continue...", 'orange'))
                 break
             finally:
                 print(colorize("Oracle creation transaction broadcasted: " + oracle_txid, "green"))
@@ -249,12 +250,12 @@ def oracle_create_tui(rpc_connection, name='', description='', oracle_data_type=
                 except KeyError:
                     print(oracle_txid)
                     print("Error")
-                    input("Press [Enter] to continue...")
+                    input(colorize("Press [Enter] to continue...", 'orange'))
                     break
                 finally:
                     oraclesfund_txid = rpclib.sendrawtransaction(rpc_connection, oraclesfund_hex['hex'])
                     check_if_tx_in_mempool(rpc_connection, oraclesfund_txid)
-                input("Press [Enter] to continue...")
+                input(colorize("Press [Enter] to continue...", 'orange'))
                 return oracle_txid
 
 def oracle_fund_tui(rpc_connection):
@@ -278,7 +279,7 @@ def oracle_fund_tui(rpc_connection):
             print(colorize("\nSomething went wrong!\n", "magenta"))
             print(oracle_fund_hex)
             print("\n")
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
             break
         else:
             try:
@@ -286,11 +287,11 @@ def oracle_fund_tui(rpc_connection):
             except KeyError:
                 print(oracle_fund_hex)
                 print("Error")
-                input("Press [Enter] to continue...")
+                input(colorize("Press [Enter] to continue...", 'orange'))
                 break
             else:
                 print(colorize("Oracle fund transaction broadcasted: " + oracle_fund_txid, "green"))
-                input("Press [Enter] to continue...")
+                input(colorize("Press [Enter] to continue...", 'orange'))
                 break
 
 def oracle_register_tui(rpc_connection, oracle_txid='', data_fee=''):
@@ -314,7 +315,7 @@ def oracle_register_tui(rpc_connection, oracle_txid='', data_fee=''):
                 print(colorize("\nSomething went wrong!\n", "magenta"))
                 print(oracle_register_hex)
                 print("\n")
-                input("Press [Enter] to continue...")
+                input(colorize("Press [Enter] to continue...", 'orange'))
             break
         else:
             try:
@@ -322,11 +323,11 @@ def oracle_register_tui(rpc_connection, oracle_txid='', data_fee=''):
             except KeyError:
                 print(oracle_register_hex)
                 print("Error")
-                input("Press [Enter] to continue...")
+                input(colorize("Press [Enter] to continue...", 'orange'))
                 break
             else:
                 print(colorize("Oracle registration transaction broadcasted: " + oracle_register_txid, "green"))
-                input("Press [Enter] to continue...")
+                input(colorize("Press [Enter] to continue...", 'orange'))
                 
 
 
@@ -340,7 +341,7 @@ def oracle_subscription_utxogen(rpc_connection, oracle_txid='', publisher_id='',
             if publisher_id == '':
                 publisher_id = select_oracle_publisher(rpc_connection, oracle_txid)
             if data_fee == '':
-                data_fee = input("Input subscription fee (in COINS!): ")
+                data_fee = input("Input subscription fee (e.g. 0.001): ")
             if utxo_num == '':
                 utxo_num = int(input("Input how many transactions you want to broadcast: "))
         except KeyboardInterrupt:
@@ -366,7 +367,7 @@ def oracle_subscription_utxogen(rpc_connection, oracle_txid='', publisher_id='',
                 if txid not in mempool:
                     subscription_txids.remove(txid)
             time.sleep(30)
-        input("Press [Enter] to continue...")
+        input(colorize("Press [Enter] to continue...", 'orange'))
         break
 
 def export_oracles(source_chain):
@@ -496,7 +497,7 @@ def find_oracle_matching_token(rpc_connection, token_name):
     match = False
     print(colorize("Searching for a matching oracle named "+token_name+"...", 'green'))
     for oracle_txid in rpc_connection.oracleslist():
-        name = rpclib.oracles_info(rpc_connection, oracle_txid)
+        name = rpclib.oracles_info(rpc_connection, oracle_txid)['name']
         if name == token_name:
             print(colorize("Matching oracle txid ["+oracle_txid+"] found!", 'green'))
             match = True
@@ -523,7 +524,7 @@ def gateways_bind_tui(rpc_connection, token_id='', token_supply='', oracle_txid=
                     oracle_txid = find_oracle_matching_token(rpc_connection, token_name)
                 except KeyError:
                     print(colorize("Not valid tokenid. Please try again.", "red"))
-                    input("Press [Enter] to continue...")
+                    input(colorize("Press [Enter] to continue...", 'orange'))
                 if token_supply == '':
                     token_info = rpclib.token_info(rpc_connection, token_id)
                     print(colorize("\n{} token total supply: {}\n".format(token_id, token_info["supply"]), "blue"))
@@ -534,7 +535,7 @@ def gateways_bind_tui(rpc_connection, token_id='', token_supply='', oracle_txid=
                     oracle_name = rpclib.oracles_info(rpc_connection, oracle_txid)["name"]
                 except KeyError:
                     print(colorize("Not valid oracle_txid. Please try again.", "red"))
-                    input("Press [Enter] to continue...")
+                    input(colorize("Press [Enter] to continue...", 'orange'))
                 while True:
                     if coin_name == '':
                         coin_name = input("Input external coin ticker (binded oracle and token need to have same name!): ")
@@ -555,27 +556,63 @@ def gateways_bind_tui(rpc_connection, token_id='', token_supply='', oracle_txid=
                 print("Your pubkey is "+rpc_connection.getinfo()['pubkey'])
                 for i in range(int(N)):
                     pubkeys.append(input("Input pubkey {}: ".format(i+1)))
-                print(colorize("pubtype, wiftype and p2shtype of many coins can be viewed at https://github.com/jl777/coins/blob/master/coins", "blue"))
+                #print(colorize("pubtype, wiftype and p2shtype of many coins can be viewed at https://github.com/jl777/coins/blob/master/coins", "blue"))
                 # TODO: integrate coins repo to autofill these values if possible
-                pubtype = input("Input pubtype of external coin ("+coin_name+"): ")
-                p2shtype = input("Input p2shtype of external coin ("+coin_name+"): ")
-                wiftype = input("Input wiftype of external coin ("+coin_name+"): ")
-                args = [rpc_connection, token_id, oracle_txid, coin_name, str(token_supply), str(M), str(N)]
-                new_args = [str(pubtype), str(p2shtype), str(wiftype)]
-                args = args + pubkeys + new_args
+                try:
+                    found_coin_params = False
+                    r = requests.get("https://raw.githubusercontent.com/jl777/coins/master/coins")
+                    coins_json = r.json()
+                    for item in coins_json:
+                        if item['coin'] == coin_name:
+                            if 'pubtype' in item:
+                                json_pubtype = item['pubtype']
+                                json_p2shtype = item['p2shtype']
+                                json_wiftype = item['wiftype']
+                                found_coin_params = True
+                                break
+                    if found_coin_params:
+                        print(colorize("Coin params found in https://github.com/jl777/coins/blob/master/coins", "green"))
+                        print(colorize('coin = '+coin_name,'blue'))
+                        print(colorize('pubtype = '+str(json_pubtype),'blue'))
+                        print(colorize('p2shtype = '+str(json_p2shtype),'blue'))
+                        print(colorize('wiftype = '+str(json_wiftype)+"\n",'blue'))
+                        while True:
+                            userinput = input(colorize("\nPress [A] to accept these values, or [M] to enter manually\n", "orange"))
+                            if userinput == 'a' or userinput == 'A':
+                                pubtype = json_pubtype
+                                p2shtype = json_p2shtype
+                                wiftype = json_wiftype
+                                break
+                            if userinput == 'm' or userinput == 'M':
+                                pubtype = input("Input pubtype of external coin ("+coin_name+"): ")
+                                p2shtype = input("Input p2shtype of external coin ("+coin_name+"): ")
+                                wiftype = input("Input wiftype of external coin ("+coin_name+"): ")
+                                break
+                            else:
+                                print(colorize("Enter [A/a] or [M/m] only! Try again...","red"))
+                                pass
+                    else:
+                        pubtype = input("Input pubtype of external coin ("+coin_name+"): ")
+                        p2shtype = input("Input p2shtype of external coin ("+coin_name+"): ")
+                        wiftype = input("Input wiftype of external coin ("+coin_name+"): ")
+                    args = [rpc_connection, token_id, oracle_txid, coin_name, str(token_supply), str(M), str(N)]
+                    new_args = [str(pubtype), str(p2shtype), str(wiftype)]
+                    args = args + pubkeys + new_args
+                except Exception as e:
+                    print(colorize("Error setting coin params...", 'red'))
+                    print(e)
+                    input(colorize("Press [Enter] to continue...", 'orange'))
+
                 # broadcasting block
                 try:
                     gateways_bind_hex = rpclib.gateways_bind(*args)
-                except Exception as e:
-                    print(e)
-                    input("Press [Enter] to continue...")
-                    break
-                try:
                     gateways_bind_txid = rpclib.sendrawtransaction(rpc_connection, gateways_bind_hex["hex"])
                 except Exception as e:
-                    print(e)
-                    print(gateways_bind_hex)
-                    input("Press [Enter] to continue...")
+                    print(colorize("Error Binding Gateway...", 'red'))
+                    print(colorize(e, 'red'))
+                    print(colorize("[gateways_bind_hex]",'cyan'))
+                    print(colorize(gateways_bind_hex,'blue'))
+                    input(colorize("Press [Enter] to continue...", 'orange'))
                     break
                 else:
                     print(colorize("Gateway bind transaction broadcasted: " + gateways_bind_txid, "green"))
@@ -583,7 +620,7 @@ def gateways_bind_tui(rpc_connection, token_id='', token_supply='', oracle_txid=
                     file.writelines(gateways_bind_txid + "\n")
                     file.close()
                     print(colorize("Entry added to gateways_list file!\n", "green"))
-                    input("Press [Enter] to continue...")
+                    input(colorize("Press [Enter] to continue...", 'orange'))
                     return gateways_bind_txid
             break
         except KeyboardInterrupt:
@@ -650,7 +687,7 @@ def gateways_send_kmd(rpc_connection_assetchain, rpc_connection, gw_deposit_addr
         file.write(gw_deposit_json)
     print(colorize("KMD Transaction ID: " + str(gw_sendmany_txid) + " Entry added to gw_deposit.json", "green"))
 
-    input("Press [Enter] to continue...")
+    input(colorize("Press [Enter] to continue...", 'orange'))
     return gw_sendmany_txid, gw_recipient_addr, gw_deposit_amount
 
 # TODO: autoget some info if possible.
@@ -756,13 +793,13 @@ def gateways_deposit_tui(rpc_connection_assetchain, rpc_connection_komodo,
             deposit_txid = rpclib.sendrawtransaction(rpc_connection_assetchain, gw_deposit_hex["hex"])
             check_if_tx_in_mempool(rpc_connection_assetchain, deposit_txid)
             print("Done! Gateways deposit txid is: " + deposit_txid + " Please not forget to claim your deposit!")
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
             return deposit_txid, dest_pub
         elif 'error' in gw_deposit_hex:
             print(colorize("GW Deposit Error: \n"+str(gw_deposit_hex['error']), 'red'))
         else:
             print(colorize("[GW Deposit Error (no msg)]\n "+str(gw_deposit_hex), 'red'))
-        input("Press [Enter] to continue...")
+        input(colorize("Press [Enter] to continue...", 'orange'))
         return
 
 
@@ -782,7 +819,7 @@ def gateways_claim_tui(rpc_connection, bind_txid='', coin_name='', deposit_txid=
             print("Error: Destination pubkey must be used to launch daemon!")
             print("Destination pubkey: "+dest_pub)
             print("Daemon pubkey: "+ac_info['pubkey'])
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
             break
         if amount == '':
             amount = input("Input amount of your deposit: ")
@@ -792,12 +829,12 @@ def gateways_claim_tui(rpc_connection, bind_txid='', coin_name='', deposit_txid=
         except Exception as e:
             print(e)
             print(claim_hex)
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
             break
         else:
             check_if_tx_in_mempool(rpc_connection, claim_txid)
             print("Succesfully claimed! Claim transaction id: " + claim_txid)
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
             return claim_txid
             break
 
@@ -811,7 +848,7 @@ def gateways_withdrawal_tui(rpc_connection):
         withdraw_hex = rpclib.gateways_withdraw(rpc_connection, bind_txid, coin_name, withdraw_pub, amount)
         withdraw_txid = rpclib.sendrawtransaction(rpc_connection, withdraw_hex["hex"])
         print(withdraw_txid)
-        input("Press [Enter] to continue...")
+        input(colorize("Press [Enter] to continue...", 'orange'))
         break
 
 
@@ -864,14 +901,14 @@ def convert_file_oracle_d(rpc_connection):
         except Exception as e:
             print(e)
             print("Seems something goes wrong (I guess you've specified wrong path)!")
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
             break
         else:
             length = round(len(hex_data) / 2)
             if length > 256:
                 print("Length: " + str(length) + " bytes")
                 print("File is too big for this app")
-                input("Press [Enter] to continue...")
+                input(colorize("Press [Enter] to continue...", 'orange'))
                 break
             else:
                 hex_length = format(length, '#04x')[2:]
@@ -905,7 +942,7 @@ def convert_file_oracle_d(rpc_connection):
                     print(e)
                 print("Oracle created: " + str(new_oracle_txid))
                 print("Data published: " + str(oracle_data_txid))
-                input("Press [Enter] to continue...")
+                input(colorize("Press [Enter] to continue...", 'orange'))
                 break
 
 
@@ -917,13 +954,13 @@ def convert_file_oracle_D(rpc_connection):
         except Exception as e:
             print(e)
             print("Seems something goes wrong (I guess you've specified wrong path)!")
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
             break
         else:
             length = round(len(hex_data) / 2)
             # if length > 800000:
             #     print("Too big file size to upload for this version of program. Maximum size is 800KB.")
-            #     input("Press [Enter] to continue...")
+            #     input(colorize("Press [Enter] to continue...", 'orange'))
             #     break
             if length > 8000:
                 # if file is more than 8000 bytes - slicing it to <= 8000 bytes chunks (16000 symbols = 8000 bytes)
@@ -984,7 +1021,7 @@ def convert_file_oracle_D(rpc_connection):
                     except Exception as e:
                         print(data_for_oracle)
                         print(e)
-                        input("Press [Enter] to continue...")
+                        input(colorize("Press [Enter] to continue...", 'orange'))
                         break
                     # on broadcasting ensuring that previous one reached mempool before blast next one
                     while True:
@@ -1009,7 +1046,7 @@ def convert_file_oracle_D(rpc_connection):
                                 break
 
                 print("Last baton: " + oracle_data_txid)
-                input("Press [Enter] to continue...")
+                input(colorize("Press [Enter] to continue...", 'orange'))
                 break
             # if file suits single oraclesdata just broadcasting it straight without any slicing
             else:
@@ -1046,12 +1083,12 @@ def convert_file_oracle_D(rpc_connection):
                 except Exception as e:
                     print(oracles_data_hex)
                     print(e)
-                    input("Press [Enter] to continue...")
+                    input(colorize("Press [Enter] to continue...", 'orange'))
                     break
                 else:
                     print("Oracle created: " + str(new_oracle_txid))
                     print("Data published: " + str(oracle_data_txid))
-                    input("Press [Enter] to continue...")
+                    input(colorize("Press [Enter] to continue...", 'orange'))
                     break
 
 
@@ -1077,7 +1114,7 @@ def display_files_list(rpc_connection):
     while True:
         for file in list_to_display:
             print(file + "\n")
-        input("Press [Enter] to continue...")
+        input(colorize("Press [Enter] to continue...", 'orange'))
         break
 
 
@@ -1098,12 +1135,12 @@ def files_downloader(rpc_connection):
                 with open(output_path, 'ab+') as file:
                     file.write(unhexlify(chunk[0]))
             print("I hope that file saved to " + output_path + "\n")
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
             break
 
         else:
             print("I cant recognize file inside this oracle. I'm very sorry, boss.")
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
             break
 
 
@@ -1121,7 +1158,7 @@ def marmara_receive_tui(rpc_connection):
                 file.write(marmara_receive_txid + "\n")
                 file.write(json.dumps(marmara_receive_txinfo, indent=4, sort_keys=True) + "\n")
             print("Transaction id is saved to receive_txids.txt file.")
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
             break
         except Exception as e:
             print(marmara_receive_txinfo)
@@ -1144,7 +1181,7 @@ def marmara_issue_tui(rpc_connection):
                 file.write(marmara_issue_txid + "\n")
                 file.write(json.dumps(marmara_issue_txinfo, indent=4, sort_keys=True) + "\n")
             print("Transaction id is saved to issue_txids.txt file.")
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
             break
         except Exception as e:
             print(marmara_issue_txinfo)
@@ -1158,7 +1195,7 @@ def marmara_creditloop_tui(rpc_connection):
         try:
             marmara_creditloop_info = rpc_connection.marmaracreditloop(loop_txid)
             print(json.dumps(marmara_creditloop_info, indent=4, sort_keys=True) + "\n")
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
             break
         except Exception as e:
             print(marmara_creditloop_info)
@@ -1177,13 +1214,13 @@ def marmara_settlement_tui(rpc_connection):
                 file.write(marmara_settlement_txid + "\n")
                 file.write(json.dumps(marmara_settlement_info, indent=4, sort_keys=True) + "\n")
             print("Transaction id is saved to settlement_txids.txt file.")
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
             break
         except Exception as e:
             print(marmara_settlement_info)
             print(e)
             print("Something went wrong. Please check your input")
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
             break
 
 
@@ -1198,12 +1235,12 @@ def marmara_lock_tui(rpc_connection):
                 file.write(marmara_lock_txid + "\n")
                 file.write(json.dumps(marmara_lock_info, indent=4, sort_keys=True) + "\n")
             print("Transaction id is saved to lock_txids.txt file.")
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
             break
         except Exception as e:
             print(e)
             print("Something went wrong. Please check your input")
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
             break
 
 
@@ -1228,13 +1265,13 @@ def marmara_info_tui(rpc_connection):
             else:
                 marmara_info = rpc_connection.marmarainfo(firstheight, lastheight, minamount, maxamount)
             print(json.dumps(marmara_info, indent=4, sort_keys=True) + "\n")
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
             break
         except Exception as e:
             print(marmara_info)
             print(e)
             print("Something went wrong. Please check your input")
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
             break
 
 
@@ -1361,7 +1398,7 @@ def rogue_newgame_singleplayer(rpc_connection, is_game_a_rogue=True):
                     print("Please choose y or n !")
         else:
             print("No players available to select")
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
             newgame_regisration_txid = rogue_game_register(rpc_connection, new_game_txid)["txid"]
         while True:
             mempool = rpc_connection.getrawmempool()
@@ -1480,11 +1517,11 @@ def rogue_newgame_singleplayer(rpc_connection, is_game_a_rogue=True):
         print(bailout_info)
         print("\nGame is finished!\n")
         bailout_txid = bailout_info["txid"]
-        input("Press [Enter] to continue...")
+        input(colorize("Press [Enter] to continue...", 'orange'))
     except Exception as e:
         print("Something went wrong.")
         print(e)
-        input("Press [Enter] to continue...")
+        input(colorize("Press [Enter] to continue...", 'orange'))
 
 
 def play_multiplayer_game(rpc_connection):
@@ -1541,7 +1578,7 @@ def play_multiplayer_game(rpc_connection):
                         time.sleep(1)
             except Exception as e:
                 print("Maybe game isn't ready for start yet or your input was not correct, sorry.")
-                input("Press [Enter] to continue...")
+                input(colorize("Press [Enter] to continue...", 'orange'))
                 break
             game_end_height = int(rpc_connection.getinfo()["blocks"])
             while True:
@@ -1612,14 +1649,14 @@ def play_multiplayer_game(rpc_connection):
                                 bailout_txid = bailout_info["txid"]
                                 print(bailout_info)
                                 print("\nGame is finished!\n")
-                                input("Press [Enter] to continue...")
+                                input(colorize("Press [Enter] to continue...", 'orange'))
                                 break
                             except Exception:
                                 highlander_info = rogue_highlander(rpc_connection, new_game_txid)
                                 highlander_info = highlander_info["txid"]
                                 print(highlander_info)
                                 print("\nGame is finished!\n")
-                                input("Press [Enter] to continue...")
+                                input(colorize("Press [Enter] to continue...", 'orange'))
                                 break
                         else:
                             highlander_info = rogue_highlander(rpc_connection, new_game_txid)
@@ -1627,12 +1664,12 @@ def play_multiplayer_game(rpc_connection):
                                 bailout_info = rogue_bailout(rpc_connection, new_game_txid)
                                 print(bailout_info)
                                 print("\nGame is finished!\n")
-                                input("Press [Enter] to continue...")
+                                input(colorize("Press [Enter] to continue...", 'orange'))
                                 break
                             else:
                                 print(highlander_info)
                                 print("\nGame is finished!\n")
-                                input("Press [Enter] to continue...")
+                                input(colorize("Press [Enter] to continue...", 'orange'))
                                 break
                     elif is_bailout_needed == "n":
                         game_end_height = int(rpc_connection.getinfo()["blocks"])
@@ -1650,7 +1687,7 @@ def play_multiplayer_game(rpc_connection):
             break
         if start_game == "n":
             print("As you wish!")
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
             break
         else:
             print(colorize("Choose y or n!", "red"))
@@ -1663,22 +1700,22 @@ def rogue_newgame_multiplayer(rpc_connection):
             break
         else:
             print("Please re-check your input")
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
     while True:
         buyin = input("Input game buyin (>0.001): ")
         if float(buyin) > 0.001:
             break
         else:
             print("Please re-check your input")
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
     try:
         new_game_txid = rpc_connection.cclib("newgame", "17", '"[' + max_players + "," + buyin + ']"')["txid"]
         print(colorize("New multiplayer game succesfully created. txid: " + new_game_txid, "green"))
-        input("Press [Enter] to continue...")
+        input(colorize("Press [Enter] to continue...", 'orange'))
     except Exception as e:
         print("Something went wrong.")
         print(e)
-        input("Press [Enter] to continue...")
+        input(colorize("Press [Enter] to continue...", 'orange'))
 
 
 def rogue_join_multiplayer_game(rpc_connection):
@@ -1704,7 +1741,7 @@ def rogue_join_multiplayer_game(rpc_connection):
             except Exception as e:
                 print("Something went wrong. Maybe you're trying to register on game twice or don't have enough funds to pay buyin.")
                 print(e)
-                input("Press [Enter] to continue...")
+                input(colorize("Press [Enter] to continue...", 'orange'))
                 break
             print(colorize("Succesfully registered.", "green"))
             while True:
@@ -1716,7 +1753,7 @@ def rogue_join_multiplayer_game(rpc_connection):
                     print(colorize("Registration transaction is mined", "green"))
                     break
             print(newgame_regisration_txid)
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
             break
         except KeyboardInterrupt:
             break
@@ -1744,7 +1781,7 @@ def print_players_list(rpc_connection):
         for item in player_data["pack"]:
             print(item)
         print("\nTotal packsize: " + str(player_data["packsize"]) + "\n")
-    input("Press [Enter] to continue...")
+    input(colorize("Press [Enter] to continue...", 'orange'))
 
 
 def sell_warrior(rpc_connection):
@@ -1761,7 +1798,7 @@ def sell_warrior(rpc_connection):
             except Exception as e:
                 print(e)
                 print("Something went wrong. Be careful with input next time.")
-                input("Press [Enter] to continue...")
+                input(colorize("Press [Enter] to continue...", 'orange'))
                 break
             token_ask_raw = rpc_connection.tokenask("1", tokenid, price)
             try:
@@ -1770,14 +1807,14 @@ def sell_warrior(rpc_connection):
                 print(e)
                 print(token_ask_raw)
                 print("Something went wrong. Be careful with input next time.")
-                input("Press [Enter] to continue...")
+                input(colorize("Press [Enter] to continue...", 'orange'))
                 break
             print(colorize("Ask succesfully placed. Ask txid is: " + token_ask_txid, "green"))
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
             break
         if need_sell == "n":
             print("As you wish!")
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
             break
         else:
             print(colorize("Choose y or n!", "red"))
@@ -1877,7 +1914,7 @@ def print_warrior_list(rpc_connection):
         for item in player_data["pack"]:
             print(item)
         print("\nTotal packsize: " + str(player_data["packsize"]) + "\n")
-    input("Press [Enter] to continue...")
+    input(colorize("Press [Enter] to continue...", 'orange'))
 
 
 def place_bid_on_warriror(rpc_connection):
@@ -1896,14 +1933,14 @@ def place_bid_on_warriror(rpc_connection):
                 print(e)
                 print(token_bid_raw)
                 print("Something went wrong. Be careful with input next time.")
-                input("Press [Enter] to continue...")
+                input(colorize("Press [Enter] to continue...", 'orange'))
                 break
             print(colorize("Bid succesfully placed. Bid txid is: " + token_bid_txid, "green"))
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
             break
         if need_buy == "n":
             print("As you wish!")
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
             break
         else:
             print(colorize("Choose y or n!", "red"))
@@ -1948,7 +1985,7 @@ def print_icoming_bids(rpc_connection):
         print("Price: " + str(bid["price"]) + "\n")
     if len(incoming_bids) == 0:
         print(colorize("There is no any incoming orders!", "blue"))
-        input("Press [Enter] to continue...")
+        input(colorize("Press [Enter] to continue...", 'orange'))
     else:
         while True:
             want_to_sell = input("Do you want to fill any incoming bid? [y/n]: ")
@@ -1965,14 +2002,14 @@ def print_icoming_bids(rpc_connection):
                     print(e)
                     print(fillbid_hex)
                     print("Something went wrong. Be careful with input next time.")
-                    input("Press [Enter] to continue...")
+                    input(colorize("Press [Enter] to continue...", 'orange'))
                     break
                 print(colorize("Warrior succesfully sold. Txid is: " + fillbid_txid, "green"))
-                input("Press [Enter] to continue...")
+                input(colorize("Press [Enter] to continue...", 'orange'))
                 break
             if want_to_sell == "n":
                 print("As you wish!")
-                input("Press [Enter] to continue...")
+                input(colorize("Press [Enter] to continue...", 'orange'))
                 break
             else:
                 print(colorize("Choose y or n!", "red"))
@@ -2018,7 +2055,7 @@ def find_warriors_asks(rpc_connection):
                 fillask_raw = rpc_connection.tokenfillask(tokenid, ask_txid, "1")
             except Exception as e:
                 print("Something went wrong. Be careful with input next time.")
-                input("Press [Enter] to continue...")
+                input(colorize("Press [Enter] to continue...", 'orange'))
                 break
             try:
                 fillask_txid = rpc_connection.sendrawtransaction(fillask_raw["hex"])
@@ -2026,14 +2063,14 @@ def find_warriors_asks(rpc_connection):
                 print(e)
                 print(fillask_raw)
                 print("Something went wrong. Be careful with input next time.")
-                input("Press [Enter] to continue...")
+                input(colorize("Press [Enter] to continue...", 'orange'))
                 break
             print(colorize("Warrior succesfully bought. Txid is: " + fillask_txid, "green"))
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
             break
         if want_to_buy == "n":
             print("As you wish!")
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
             break
         else:
             print(colorize("Choose y or n!", "red"))
@@ -2128,11 +2165,11 @@ def warriors_orders_check(rpc_connection):
                     break
                 else:
                     print(colorize("Choose a or b!", "red"))
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
             break
         if need_order_change == "n":
             print("As you wish!")
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
             break
         else:
             print(colorize("Choose y or n!", "red"))
@@ -2145,7 +2182,7 @@ def set_warriors_name(rpc_connection):
     print(colorize("Warrior name succesfully set", "green"))
     print("Result: " + set_name_status["result"])
     print("Name: " + set_name_status["pname"])
-    input("Press [Enter] to continue...")
+    input(colorize("Press [Enter] to continue...", 'orange'))
 
 
 def top_warriors_rating(rpc_connection):
@@ -2175,7 +2212,7 @@ def top_warriors_rating(rpc_connection):
             print("Dungeon Level: " + str(player_data["dungeonlevel"]))
             print("Chain: " + player_data["chain"])
     print("--- %s seconds ---" % (time.time() - start_time))
-    input("Press [Enter] to continue...")
+    input(colorize("Press [Enter] to continue...", 'orange'))
 
 
 def exit():
@@ -2200,14 +2237,14 @@ def warrior_trasnfer(rpc_connection):
             except Exception as e:
                 print(e)
                 print("Something went wrong. Please be careful with your input next time!")
-                input("Press [Enter] to continue...")
+                input(colorize("Press [Enter] to continue...", 'orange'))
                 break
             print(colorize("Warrior succesfully transferred! Transfer txid: " + token_transfer_txid, "green"))
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
             break
         if need_transfer == "n":
             print("As you wish!")
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
             break
         else:
             print(colorize("Choose y or n!", "red"))
@@ -2265,7 +2302,7 @@ def gateway_info_tui(rpc_connection, gw_index=''):
             gateways_list = rpc_connection.gatewayslist()
             if len(gateways_list) == 0:
                 print("Seems like a no gateways created on this assetchain yet!\n")
-                input("Press [Enter] to continue...")
+                input(colorize("Press [Enter] to continue...", 'orange'))
                 return
             else:
                 i = 1
@@ -2302,13 +2339,13 @@ def gateway_info_tui(rpc_connection, gw_index=''):
         print(colorize("Gateways Total Supply      ["+str(info['totalsupply'])+"]", 'green'))
         print(colorize("Gateways Remaining Supply  ["+str(info['remaining'])+"]", 'green'))
         print(colorize("Gateways Issued Supply     ["+str(info['issued'])+"]", 'green'))
-        input("Press [Enter] to continue...")
+        input(colorize("Press [Enter] to continue...", 'orange'))
         return gw_index
     except Exception as e:
         print(info)
         print(e)
         print("Something went wrong. Please check your input")
-        input("Press [Enter] to continue...")
+        input(colorize("Press [Enter] to continue...", 'orange'))
 
 def gateways_deposit_claim_tokens(rpc_connection_assetchain, rpc_connection_komodo):
     selected_gateway = gateway_info_tui(rpc_connection_assetchain)
@@ -2355,7 +2392,7 @@ def pegs_fund_tui(rpc_connection):
             print(colorize("\nSomething went wrong!\n", "magenta"))
             print(fund_hex)
             print("\n")
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
             break
         else:
             try:
@@ -2364,11 +2401,11 @@ def pegs_fund_tui(rpc_connection):
             except KeyError:
                 print(pegsfund_txid)
                 print("Error")
-                input("Press [Enter] to continue...")
+                input(colorize("Press [Enter] to continue...", 'orange'))
                 break
             finally:
                 print(colorize("Pegs Fund transaction broadcasted: " + pegsfund_txid, "green"))
-                input("Press [Enter] to continue...")
+                input(colorize("Press [Enter] to continue...", 'orange'))
                 break
 
 
@@ -2388,7 +2425,7 @@ def pegs_get_tui(rpc_connection):
             else:
                 print("Something went wrong.")
                 print(info)
-                input("Press [Enter] to continue...")
+                input(colorize("Press [Enter] to continue...", 'orange'))
                 break
             amount = input("Set pegs get amount: ")
         except KeyboardInterrupt:
@@ -2399,7 +2436,7 @@ def pegs_get_tui(rpc_connection):
             print(colorize("\nSomething went wrong!\n", "magenta"))
             print(pegsget_hex)
             print("\n")
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
             break
         else:
             try:
@@ -2408,11 +2445,11 @@ def pegs_get_tui(rpc_connection):
             except KeyError:
                 print(pegsget_hex)
                 print("Error")
-                input("Press [Enter] to continue...")
+                input(colorize("Press [Enter] to continue...", 'orange'))
                 break
             finally:
                 print(colorize("Pegs Get transaction broadcasted: " +pegsget_txid, "green"))
-                input("Press [Enter] to continue...")
+                input(colorize("Press [Enter] to continue...", 'orange'))
                 break
 
 # pegs_txid = 5ccdff0d29f2f47fb1e349c1ff9ae17977a58763abacf693cd27e98b38fad3f3
@@ -2432,15 +2469,15 @@ def pegsinfo_tui(rpc_connection):
             else:
                 print("Something went wrong.")
                 print(info)
-                input("Press [Enter] to continue...")
+                input(colorize("Press [Enter] to continue...", 'orange'))
                 break
         except KeyError:
             print(info)
             print("Error")
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
             break
         finally:
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
             break
 
 def pegs_accounthistory_tui(rpc_connection):
@@ -2465,10 +2502,10 @@ def pegs_accounthistory_tui(rpc_connection):
         except KeyError:
             print(history)
             print("Key Error: "+str(KeyError))
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
             break
         finally:
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
             break
 
 
@@ -2487,15 +2524,15 @@ def pegs_accountinfo_tui(rpc_connection):
             else:
                 print("Something went wrong.")
                 print(info)
-                input("Press [Enter] to continue...")
+                input(colorize("Press [Enter] to continue...", 'orange'))
                 break
         except KeyError:
             print(info)
             print("Error")
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
             break
         finally:
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
             break
 
 def pegs_addresses_tui(rpc_connection):
@@ -2515,15 +2552,15 @@ def pegs_addresses_tui(rpc_connection):
             else:
                 print("Something went wrong.")
                 print(address)
-                input("Press [Enter] to continue...")
+                input(colorize("Press [Enter] to continue...", 'orange'))
                 break
         except KeyError:
             print(address)
             print("Error")
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
             break
         finally:
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
             break
 
 
@@ -2555,10 +2592,10 @@ def pegs_worstaccounts_tui(rpc_connection):
         except KeyError:
             print(worst)
             print("Key Error: "+str(KeyError))
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
             break
         finally:
-            input("Press [Enter] to continue...")
+            input(colorize("Press [Enter] to continue...", 'orange'))
             break
 
 
@@ -2639,11 +2676,11 @@ def pegs_create_tui():
         print("Gateways Deposit Address   ["+str(info['deposit'])+"]")
             
         print(colorize("Details have been written to "+coin+"_pegsinfo.json", 'blue'))
-        input("Press [Enter] to continue...")
+        input(colorize("Press [Enter] to continue...", 'orange'))
         return pegs_txid
     else:
         print(colorize("Pegs TXID failed!        ["+str(result)+"]", 'red'))
-        input("Press [Enter] to continue...")
+        input(colorize("Press [Enter] to continue...", 'orange'))
         return 'back to menu'
     
 def spawn_oraclefeed(dest_chain, kmd_path, oracle_txid, pubkey, bind_txid):
@@ -2659,7 +2696,7 @@ def spawn_oraclefeed(dest_chain, kmd_path, oracle_txid, pubkey, bind_txid):
     print(colorize("IMPORTANT: The oraclefeed must be running at all times for the Pegs contract to work!", "red"))
     oraclefeed_launch_str = str(kmd_path+"/oraclefeed "+dest_chain+" "+oracle_txid+" "+pubkey+" Ihh "+bind_txid+" "+kmd_path+"/komodo-cli")
     print(colorize("Launch it with "+oraclefeed_launch_str, "blue"))
-    input("Press [Enter] to continue...")
+    input(colorize("Press [Enter] to continue...", 'orange'))
     return oraclefeed_launch_str
 
 def oraclefeed_tui(jsonfile=''):
@@ -2689,7 +2726,7 @@ def oraclefeed_tui(jsonfile=''):
             with open(jsonfile, 'r') as f:
                 oraclefeed_json = json.loads(f.read())
             oraclefeed_params = oraclefeed_json['Oraclefeed_Launch_Parameters'].split(" ")
-            kmd_path = oraclefeed_params[0].replace("oraclefeed","")
+            kmd_path = oraclefeed_params[0].replace("/oraclefeed","")
             dest_chain = oraclefeed_params[1]
             oracle_txid = oraclefeed_params[2]
             pubkey = oraclefeed_params[3]
@@ -2801,7 +2838,7 @@ def payments_info(rpc_connection):
     if payments_txid != 'back to menu':
         info = rpc_connection.paymentsinfo('[\"{}\"]'.format(payments_txid))
         print(info)
-        input("Press [Enter] to continue...")
+        input(colorize("Press [Enter] to continue...", 'orange'))
 
 def payments_create(rpc_connection, locked_blocks='', min_release='', opret_list=[]):
     if locked_blocks == '':
@@ -2822,13 +2859,13 @@ def payments_create(rpc_connection, locked_blocks='', min_release='', opret_list
         print(colorize("Payments Create Txid: "+txid, 'green'))
         print(colorize("Confirming transaction\n", "blue"))
         check_if_tx_in_mempool(rpc_connection, txid)
-        input("Press [Enter] to continue...")
+        input(colorize("Press [Enter] to continue...", 'orange'))
         return txid
     except Exception as e:
         print("Something went wrong!")
         print(e)
         print(raw_hex)
-        input("Press [Enter] to continue...")
+        input(colorize("Press [Enter] to continue...", 'orange'))
 
 def payments_fund(rpc_connection, createtxid='', amount='', useopret=0):
     if createtxid == '':
@@ -2845,13 +2882,13 @@ def payments_fund(rpc_connection, createtxid='', amount='', useopret=0):
         print(colorize("Payments Fund Txid: "+txid, 'green'))
         print(colorize("Confirming transaction\n", "blue"))
         check_if_tx_in_mempool(rpc_connection, txid)
-        input("Press [Enter] to continue...")
+        input(colorize("Press [Enter] to continue...", 'orange'))
         return txid
     except Exception as e:
         print("Something went wrong!")
         print(e)
         print(raw_hex)
-        input("Press [Enter] to continue...")
+        input(colorize("Press [Enter] to continue...", 'orange'))
 
 def payments_merge(rpc_connection, createtxid=''):
     if createtxid == '':
@@ -2863,13 +2900,13 @@ def payments_merge(rpc_connection, createtxid=''):
         print(colorize("Payments Merge Txid: "+txid, 'green'))
         print(colorize("Confirming transaction\n", "blue"))
         check_if_tx_in_mempool(rpc_connection, txid)
-        input("Press [Enter] to continue...")
+        input(colorize("Press [Enter] to continue...", 'orange'))
         return txid
     except Exception as e:
         print("Something went wrong!")
         print(e)
         print(raw_hex)
-        input("Press [Enter] to continue...")
+        input(colorize("Press [Enter] to continue...", 'orange'))
 
 
 def payments_release(rpc_connection, createtxid='', amount='', skip_min=0):
@@ -2887,13 +2924,13 @@ def payments_release(rpc_connection, createtxid='', amount='', skip_min=0):
         print(colorize("Payments Release Txid: "+txid, 'green'))
         print(colorize("Confirming transaction\n", "blue"))
         check_if_tx_in_mempool(rpc_connection, txid)
-        input("Press [Enter] to continue...")
+        input(colorize("Press [Enter] to continue...", 'orange'))
         return txid
     except Exception as e:
         print("Something went wrong!")
         print(e)
         print(raw_hex)
-        input("Press [Enter] to continue...")
+        input(colorize("Press [Enter] to continue...", 'orange'))
 
 
 def payments_txidopret(rpc_connection, allocation='', pubkey='', destopret=''):
@@ -2919,13 +2956,13 @@ def payments_txidopret(rpc_connection, allocation='', pubkey='', destopret=''):
         print(colorize("OPRET TXID: "+txid, 'green'))
         print(colorize("Confirming transaction\n", "blue"))
         check_if_tx_in_mempool(rpc_connection, txid)
-        input("Press [Enter] to continue...")
+        input(colorize("Press [Enter] to continue...", 'orange'))
         return txid
     except Exception as e:
         print("Something went wrong!")
         print(e)
         print(raw_hex)
-        input("Press [Enter] to continue...")
+        input(colorize("Press [Enter] to continue...", 'orange'))
 
 # Selection menus and validation
 
@@ -3002,7 +3039,7 @@ def select_oracle_txid(rpc_connection):
     oracle_list = rpc_connection.oracleslist()
     if len(oracle_list) == 0:
         print(colorize("No oracles on this smart chain!", "red"))
-        input("Press [Enter] to continue...")
+        input(colorize("Press [Enter] to continue...", 'orange'))
         return 'back to menu'
     i = 1
     header = "|"+'{:^6}'.format("[#]")+"|" \
@@ -3069,7 +3106,7 @@ def select_gateway(rpc_connection):
     gw_list = rpc_connection.gatewayslist()
     if len(gw_list) == 0:
         print(colorize("No gateways on this smart chain!", "red"))
-        input("Press [Enter] to continue...")
+        input(colorize("Press [Enter] to continue...", 'orange'))
         return 'back to menu'
     i = 1
     for gw in gw_list:
@@ -3083,7 +3120,7 @@ def select_payments(rpc_connection):
     payments_list = rpc_connection.paymentslist()['createtxids']
     if len(payments_list) == 0:
         print(colorize("No Payments contracts on this smart chain!", "red"))
-        input("Press [Enter] to continue...")
+        input(colorize("Press [Enter] to continue...", 'orange'))
         return 'back to menu'
     i = 1
     header = "|"+'{:^5}'.format("[#]")+"|" \
@@ -3125,7 +3162,7 @@ def select_oracle_publisher(rpc_connection, oracle_txid):
     i = 1
     if len(info['registered']) == 0:
         print(colorize("No publishers registered on this oracle!", "red"))
-        input("Press [Enter] to continue...")
+        input(colorize("Press [Enter] to continue...", 'orange'))
         return 'back to menu'
     i = 1
     header = "|"+'{:^5}'.format("[#]")+"|" \

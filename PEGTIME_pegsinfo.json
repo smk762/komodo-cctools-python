@@ -1,0 +1,11 @@
+{
+"Pegs_Launch_Parameters":"-ac_supply=5000 -ac_reward=800000000 -ac_sapling=1 -addnode=localhost -ac_snapshot=1440 -ac_cc=2 -ac_import=PEGSCC -debug=gatewayscc-2 -ac_end=1 -ac_perc=0 -ac_cbopret=7 -ac_name=PEGTIME -earlytxid=fefbffca6b5a11ef71a4fd611b103ec7eb83938087e15edc242c2922ded98047",
+"Oraclefeed_Launch_Parameters":"/home/smk762/Mixa84/komodo/src/oraclefeed PEGTIME 0dd59ba1ff6197299182d78ae9c7482bad30a2c9dd83e7337887923f33d0c04e 03ae47f35db30d5e366d8acf419168b6eaeb8489f5379bad24e749704aa505afee Ihh 84a481f8ad9374f1cc6e818dc50ba470a85dae91ecf061de341f8370f85637b1 /home/smk762/Mixa84/komodo/src/komodo-cli",
+"Pegs_Creation_TXID":"fefbffca6b5a11ef71a4fd611b103ec7eb83938087e15edc242c2922ded98047",
+"Gateways_Bind_TXID":"84a481f8ad9374f1cc6e818dc50ba470a85dae91ecf061de341f8370f85637b1",
+"Oracle_TXID":"04f07d16b61ee047d1c9c9a982732c4981a6ec978f85f67abe4753921ebb1e72",
+"Token_TXID":"65342e735511e6ce40a2ef152b1e5711c7e35a54a98f94514b42cc12fc8e6ddc",
+"Coin":"KMD",
+"Pubkeys":"['03ae47f35db30d5e366d8acf419168b6eaeb8489f5379bad24e749704aa505afee']",
+"Gateways_Deposit_Address":"RQBxtuSWFherwRN92vMsYDJs3Q5z6MH9Zw"
+}

@@ -252,7 +252,7 @@ def submenu(menu, rpc_connection='', rpc_connection_kmd=''):
                     except Exception as e:
                         print("Something went wrong with "+str(list(menuItems[int(choice)].values())[0]))
                         input(e)
-                        input("Press [Enter] to continue...")
+                        input(tuilib.colorize("Press [Enter] to continue...", 'orange'))
                         break
             elif list(menuItems[int(choice)].keys())[0] in kmd_ac_rpc_options:
                 while True:
@@ -262,7 +262,7 @@ def submenu(menu, rpc_connection='', rpc_connection_kmd=''):
                     except Exception as e:
                         print("Something went wrong with "+str(list(menuItems[int(choice)].values())[0]))
                         print(e)
-                        input("Press [Enter] to continue...")
+                        input(tuilib.colorize("Press [Enter] to continue...", 'orange'))
                         break
             else:
                 list(menuItems[int(choice)].values())[0](rpc_connection)
