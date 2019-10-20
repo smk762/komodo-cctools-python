@@ -697,8 +697,29 @@ def operationstatus_to_txid(rpc_connection, zstatus):
     operation_json = rpc_connection.z_getoperationstatus(sending_block)
     operation_dump = json.dumps(operation_json)
     operation_dict = json.loads(operation_dump)[0]
-    txid = operation_dict['result']['txid']
-    return txid
+    if 'result' in operation_dict:
+        txid = operation_dict['result']['txid']
+        return txid
+    else:
+        return operation_dict
+
+def unlock_wallet(rpc_connection):
+    chances = 3
+    while True:
+        passphrase = input(colorize("Please enter your wallet passphrase: ",'input'))
+        timeout = input(colorize("Please enter seconds to unlock (recommended 1800): ",'input'))
+        try:
+            resp = rpc_connection.walletpassphrase(passphrase, int(timeout))
+            print(colorize("Wallet unlocked, you may now proceed!",'success'))
+            return
+        except Exception as e:
+            if chances == 0:
+                print(colorize("Incorrect! No TUI for you!",'red'))
+                sys.exit()
+            print(colorize("Incorrect! You have "+str(chances)+" chances remaining...: ",'red'))
+            print(colorize(e,'red'))
+            chances -= 1
+            pass
 
 def gateways_send_kmd(rpc_connection_assetchain, rpc_connection, gw_deposit_addr=''):
     # TODO: have to handle CTRL+C on text input
@@ -720,7 +741,7 @@ def gateways_send_kmd(rpc_connection_assetchain, rpc_connection, gw_deposit_addr
         else:
             break
     while True:
-        print(colorize("The "+ac_name+" deamon pubkey is "+colorize("["+ac_pubkey+"]",'info')+" linked to address "+colorize("["+ac_addr+"]",'info'), 'green'))
+        print(colorize("The "+ac_name+" deamon pubkey is "+colorize("["+ac_pubkey+"]",'info')+colorize(" linked to address ",'green')+colorize("["+ac_addr+"]",'info'), 'green'))
         gw_recipient_addr = input(colorize("Input Gateway recipient "+ac_name+" address (linked to pubkey which will receive tokens): ",'input'))
         valid = rpc_connection.validateaddress(gw_recipient_addr)['isvalid']
         if not valid:
@@ -734,10 +755,27 @@ def gateways_send_kmd(rpc_connection_assetchain, rpc_connection, gw_deposit_addr
     check_sync(rpc_connection)
     operation = z_sendmany_twoaddresses(rpc_connection, sendaddress, gw_recipient_addr,
                                      amount1, gw_deposit_addr, gw_deposit_amount)
-    print(colorize("z_sendmany transaction sent! [" + str(operation) + "] Let's wait 2 seconds to get txid...",'success'))
     # trying to avoid pending status of operation
     time.sleep(2)
     gw_sendmany_txid = operationstatus_to_txid(rpc_connection, operation)
+    while len(gw_sendmany_txid) != 64:
+        if 'error' in gw_sendmany_txid:
+            print(colorize("Error: [" + str(gw_sendmany_txid['error']) + "]...",'error'))
+            if gw_sendmany_txid['error']['message'] == 'AsyncRPCOperation_sendmany::main_impl(): HD seed not found':
+                print(colorize("Your wallet.dat is locked by encryption...",'warning'))
+                unlock_wallet(rpc_connection)
+                operation = z_sendmany_twoaddresses(rpc_connection, sendaddress, gw_recipient_addr,
+                                                 amount1, gw_deposit_addr, gw_deposit_amount)
+                time.sleep(2)
+                gw_sendmany_txid = operationstatus_to_txid(rpc_connection, operation)
+            else:
+                print(colorize("z_sendmany transaction failed! [" + str(gw_sendmany_txid) + "]...",'error'))
+        else:
+            print(colorize("z_sendmany transaction failed! [" + str(gw_sendmany_txid) + "]...",'error'))
+        input(colorize("Press [Enter] to continue...\n", 'continue'))
+    print(colorize("z_sendmany transaction sent! [" + str(operation) + "]...",'success'))
+
+    print(colorize("TXID: [" + str(gw_sendmany_txid) + "]...",'success'))
     check_if_tx_in_mempool(rpc_connection, gw_sendmany_txid)
     gw_deposit_details = {"gw_sendmany_txid": gw_sendmany_txid,
                        "gw_recipient_addr": gw_recipient_addr,
@@ -860,8 +898,8 @@ def gateways_deposit_tui(rpc_connection_assetchain, rpc_connection_komodo,
         print(colorize(deposit_hex,'rpc_response'))
         claim_vout = "0"
         proof_sending_block = "[\"{}\"]".format(coin_txid)
-        print(colorize("[proof_sending_block]",'rpc_response'))
-        print(colorize(proof_sending_block,'hex'))
+        print(colorize("[proof_sending_block]",'info'))
+        print(colorize(proof_sending_block,'rpc_response'))
         proof = rpc_connection_komodo.gettxoutproof(json.loads(proof_sending_block))
         print(colorize("[proof]",'info'))
         print(colorize(proof,'rpc_response'))
@@ -883,7 +921,7 @@ def gateways_deposit_tui(rpc_connection_assetchain, rpc_connection_komodo,
             with open(cwd+"/gw_deposits/gw_deposit_"+coin_txid+".json", "w+") as file:
                 file.write(gw_deposit_json)
             print(colorize("Done! Gateways deposit txid is: [" + deposit_txid + "]", 'success'))
-            print(colorize("Please not forget to claim your deposit!", 'success'))
+            print(colorize("Please don't forget to claim your deposit!", 'success'))
             input(colorize("Press [Enter] to continue...\n", 'continue'))
             return deposit_txid, dest_pub
         elif 'error' in gw_deposit_hex:
@@ -915,20 +953,27 @@ def gateways_claim_tui(rpc_connection, bind_txid='', coin_name='', deposit_txid=
             break
         if amount == '':
             amount = input("Input amount of your deposit: ")
-        claim_hex = rpclib.gateways_claim(rpc_connection, bind_txid, coin_name, deposit_txid, dest_pub, amount)
-        try:
-            claim_txid = rpclib.sendrawtransaction(rpc_connection, claim_hex["hex"])
-        except Exception as e:
-            print(e)
-            print(claim_hex)
-            input(colorize("Press [Enter] to continue...\n", 'continue'))
-            break
-        else:
-            check_if_tx_in_mempool(rpc_connection, claim_txid)
-            print("Succesfully claimed! Claim transaction id: " + claim_txid)
-            input(colorize("Press [Enter] to continue...\n", 'continue'))
-            return claim_txid
-            break
+        while True:
+            claim_hex = rpclib.gateways_claim(rpc_connection, bind_txid, coin_name, deposit_txid, dest_pub, amount)
+            print(colorize('Gateways Claim', 'info'))
+            print(colorize(claim_hex, 'rpc_response'))
+            if 'hex' in claim_hex:
+                claim_txid = rpclib.sendrawtransaction(rpc_connection, claim_hex["hex"])
+                check_if_tx_in_mempool(rpc_connection, claim_txid)
+                print(colorize("Succesfully claimed! Claim transaction id: ["+claim_txid+"]", 'success'))
+                input(colorize("Press [Enter] to continue...\n", 'continue'))
+                return claim_txid
+            elif 'error' in claim_hex:
+                if claim_hex['error'] == 'gatewaysdeposit tx not yet confirmed/notarized':
+                    print(colorize("Gatewaysdeposit tx not yet confirmed/notarized!", 'continue'))
+                    print(colorize("Waiting 60 sec...", 'continue'))
+                    time.sleep(60)
+                pass
+            else:
+                print(colorize("Something went wring in claim...\n", 'error'))
+                print(colorize(claim_hex, 'rpc_response'))
+                input(colorize("Press [Enter] to continue...\n", 'continue'))
+                break
 
 
 def gateways_withdrawal_tui(rpc_connection):
@@ -2452,6 +2497,7 @@ def gateways_deposit_claim_tokens(rpc_connection_assetchain, rpc_connection_komo
                         gw_recipient_addr)
     deposit_txid = deposit_info[0]
     dest_pub = deposit_info[1]
+    check_if_tx_in_mempool(rpc_connection_assetchain, deposit_txid)
     claim_txid = gateways_claim_tui(rpc_connection_assetchain, bind_txid, gw_info['coin'],
                  deposit_txid, dest_pub, gw_deposit_amount)
     tokenbalance = rpc_connection_assetchain.tokenbalance(gw_info['tokenid'])
