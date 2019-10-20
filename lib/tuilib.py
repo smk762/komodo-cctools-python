@@ -731,7 +731,7 @@ def gateways_send_kmd(rpc_connection_assetchain, rpc_connection, gw_deposit_addr
             break
     #have to show here deposit addresses for gateways created by user
     gw_deposit_amount = float(input(colorize("Input how many KMD you want to deposit on this gateway: ", 'input')))
-    rpclib.check_sync(rpc_connection)
+    check_sync(rpc_connection)
     operation = z_sendmany_twoaddresses(rpc_connection, sendaddress, gw_recipient_addr,
                                      amount1, gw_deposit_addr, gw_deposit_amount)
     print(colorize("z_sendmany transaction sent! [" + str(operation) + "] Let's wait 2 seconds to get txid...",'success'))
