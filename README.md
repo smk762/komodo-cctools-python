@@ -11,7 +11,7 @@ Python3 required for execution:
 
 pip packages needed:
 
-* `pip3 install setuptools wheel slick-bitcoinrpc requests`
+* `pip3 install setuptools wheel slick-bitcoinrpc requests python-bitcoinlib`
 * or `pip3 install -r requirements.txt`
 
 For prices visualisation you'll also need additonal Dash framework deps:

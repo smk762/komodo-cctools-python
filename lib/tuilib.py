@@ -65,6 +65,29 @@ def colorize(string, color):
         else:
                 return colors[color] + str(string) + '\033[0m'
 
+def check_sync(rpc_connection, menu=False):
+    while True:
+        chain_info = rpc_connection.getinfo()
+        synced = chain_info['synced']
+        chain_name = chain_info['name']
+        chain_blocks = chain_info['name']
+        chain_longestchain = chain_info['name']
+        if synced:
+            if not menu:
+                print(colorize(chain_name+" sync confirmed...",'success'))
+                break
+            else:
+                return True
+        else:
+            if not menu:
+                print(colorize("Waiting 60 sec for "+chain_name+" to sync...",'continue'))
+                print(colorize("[Blocks] "+str(chain_blocks),'info'))
+                print(colorize("[Longest chain] "+str(chain_longestchain),'info'))
+                time.sleep(60)
+            else:
+                return False
+
+
 #TODO: check if pubkey is set  
 def kmd_rpc_connection_tui():
     rpc_info = rpclib.get_rpc_details('KMD')
@@ -708,6 +731,7 @@ def gateways_send_kmd(rpc_connection_assetchain, rpc_connection, gw_deposit_addr
             break
     #have to show here deposit addresses for gateways created by user
     gw_deposit_amount = float(input(colorize("Input how many KMD you want to deposit on this gateway: ", 'input')))
+    rpclib.check_sync(rpc_connection)
     operation = z_sendmany_twoaddresses(rpc_connection, sendaddress, gw_recipient_addr,
                                      amount1, gw_deposit_addr, gw_deposit_amount)
     print(colorize("z_sendmany transaction sent! [" + str(operation) + "] Let's wait 2 seconds to get txid...",'success'))
@@ -720,6 +744,8 @@ def gateways_send_kmd(rpc_connection_assetchain, rpc_connection, gw_deposit_addr
                        "gw_deposit_amount": gw_deposit_amount,
                        "gw_deposit_status": "undeposited"}
     gw_deposit_json = json.dumps(gw_deposit_details)
+    if not os.path.exists(cwd+"/gw_deposits"):
+        os.makedirs(cwd+"/gw_deposits")
     with open(cwd+"/gw_deposits/gw_deposit_"+gw_sendmany_txid+".json", "w+") as file:
         file.write(gw_deposit_json)
     print(colorize("KMD Transaction ID: " + str(gw_sendmany_txid),'success'))
@@ -787,6 +813,8 @@ def gateways_deposit_tui(rpc_connection_assetchain, rpc_connection_komodo,
                                "gw_deposit_amount": amount,
                                "gw_deposit_status": "undeposited"}
             gw_deposit_json = json.dumps(gw_deposit_details)
+            if not os.path.exists(cwd+"/gw_deposits"):
+                os.makedirs(cwd+"/gw_deposits")
             with open(cwd+"/gw_deposits/gw_deposit_"+coin_txid+".json", "w+") as file:
                 file.write(gw_deposit_json)
             jsonfile = cwd+"/gw_deposits/gw_deposit_"+coin_txid+".json"
@@ -849,6 +877,9 @@ def gateways_deposit_tui(rpc_connection_assetchain, rpc_connection_komodo,
                                "gw_deposit_amount": amount,
                                "gw_deposit_status": "unclaimed"}
             gw_deposit_json = json.dumps(gw_deposit_details)
+
+            if not os.path.exists(cwd+"/gw_deposits"):
+                os.makedirs(cwd+"/gw_deposits")
             with open(cwd+"/gw_deposits/gw_deposit_"+coin_txid+".json", "w+") as file:
                 file.write(gw_deposit_json)
             print(colorize("Done! Gateways deposit txid is: [" + deposit_txid + "]", 'success'))

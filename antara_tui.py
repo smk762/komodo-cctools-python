@@ -174,7 +174,11 @@ def get_rpc_status(menu, rpc_connection='', rpc_connection_kmd=''):
     if menu['name'] not in ['Pegs create']:
         try: 
             ac_name = rpc_connection.getinfo()['name']
-            ac_rpc_status = tuilib.colorize("[Connected to "+ac_name+"]", 'green')
+            synced = tuilib.check_sync(rpc_connection, True)
+            if synced:
+                ac_rpc_status = tuilib.colorize("[Connected to "+ac_name+"]", 'green')
+            else:
+                ac_rpc_status = tuilib.colorize("["+ac_name+" not synced]", 'orange')
             add_to_menu.append({"Check connection to Smartchain": tuilib.getinfo_tui})
         except:
             ac_rpc_status = tuilib.colorize("[Not connected to Smartchain]", 'red')
@@ -183,7 +187,11 @@ def get_rpc_status(menu, rpc_connection='', rpc_connection_kmd=''):
     if menu['name'] not in ['Payments', 'Oracles']:
         try:
             ac_name = rpc_connection_kmd.getinfo()['name']
-            kmd_rpc_status = tuilib.colorize("[Connected to KMD]", 'green')
+            synced = tuilib.check_sync(rpc_connection_kmd, True)
+            if synced:
+                kmd_rpc_status= tuilib.colorize("[Connected to "+ac_name+"]", 'green')
+            else:
+                kmd_rpc_status = tuilib.colorize("["+ac_name+" not synced]", 'orange')                
             add_to_menu.append({"Check connection to KMD": tuilib.getinfo_tui})
         except Exception as e:
             kmd_rpc_status = tuilib.colorize("[Not connected to KMD]", 'red')
