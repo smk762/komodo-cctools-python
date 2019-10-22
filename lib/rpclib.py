@@ -16,6 +16,24 @@ class CoinParams(CoreMainParams):
                        'SECRET_KEY': 188}
 bitcoin.params = CoinParams
 
+def unlock_wallet(rpc_connection):
+    chances = 3
+    while True:
+        passphrase = input(colorize("Please enter your wallet passphrase: ",'input'))
+        timeout = input(colorize("Please enter seconds to unlock (recommended 1800): ",'input'))
+        try:
+            resp = rpc_connection.walletpassphrase(passphrase, int(timeout))
+            print(colorize("Wallet unlocked, you may now proceed!",'success'))
+            return
+        except Exception as e:
+            if chances == 0:
+                print(colorize("Incorrect! No TUI for you!",'red'))
+                sys.exit()
+            print(colorize("Incorrect! You have "+str(chances)+" chances remaining...: ",'red'))
+            print(colorize(e,'red'))
+            chances -= 1
+            pass
+
 def get_radd_from_pub(pub):
     try:
         radd = str(P2PKHBitcoinAddress.from_pubkey(x(pub)))
@@ -25,7 +43,10 @@ def get_radd_from_pub(pub):
 
 # RPC connection
 def get_rpc_details(chain):
-    rpcport ='';
+    rpcport =''
+    rpcuser =''
+    rpcpassword =''
+    bad_conf = False
     operating_system = platform.system()
     if operating_system == 'Darwin':
         ac_dir = os.environ['HOME'] + '/Library/Application Support/Komodo'
@@ -46,13 +67,21 @@ def get_rpc_details(chain):
                 rpcpassword = l.replace('rpcpassword=', '')
             elif re.search('rpcport', l):
                 rpcport = l.replace('rpcport=', '')
-    if len(rpcport) == 0:
+    if rpcport == '':
         if chain == 'KMD':
             rpcport = 7771
         else:
             print("rpcport not in conf file, exiting")
-            print("check "+coin_config_file)
-            exit(1)
+        bad_conf = True
+    if rpcuser == '':
+        print("rpcuser not in conf file, exiting")
+        bad_conf = True
+    if rpcpassword == '':
+        print("rpcpassword not in conf file, exiting")
+        bad_conf = True
+    if bad_conf:
+        print("check "+coin_config_file)
+        exit(1)
     return rpcuser, rpcpassword, rpcport
 
 def def_credentials(chain):
@@ -78,7 +107,6 @@ def getinfo(rpc_connection):
     except Exception:
         raise Exception("Connection error!")
     return getinfo
-
 
 def sendrawtransaction(rpc_connection, hex):
     tx_id = rpc_connection.sendrawtransaction(hex)

@@ -703,23 +703,6 @@ def operationstatus_to_txid(rpc_connection, zstatus):
     else:
         return operation_dict
 
-def unlock_wallet(rpc_connection):
-    chances = 3
-    while True:
-        passphrase = input(colorize("Please enter your wallet passphrase: ",'input'))
-        timeout = input(colorize("Please enter seconds to unlock (recommended 1800): ",'input'))
-        try:
-            resp = rpc_connection.walletpassphrase(passphrase, int(timeout))
-            print(colorize("Wallet unlocked, you may now proceed!",'success'))
-            return
-        except Exception as e:
-            if chances == 0:
-                print(colorize("Incorrect! No TUI for you!",'red'))
-                sys.exit()
-            print(colorize("Incorrect! You have "+str(chances)+" chances remaining...: ",'red'))
-            print(colorize(e,'red'))
-            chances -= 1
-            pass
 
 def gateways_send_kmd(rpc_connection_assetchain, rpc_connection, gw_deposit_addr=''):
     # TODO: have to handle CTRL+C on text input
@@ -763,7 +746,7 @@ def gateways_send_kmd(rpc_connection_assetchain, rpc_connection, gw_deposit_addr
             print(colorize("Error: [" + str(gw_sendmany_txid['error']) + "]...",'error'))
             if gw_sendmany_txid['error']['message'] == 'AsyncRPCOperation_sendmany::main_impl(): HD seed not found':
                 print(colorize("Your wallet.dat is locked by encryption...",'warning'))
-                unlock_wallet(rpc_connection)
+                rpclib.unlock_wallet(rpc_connection)
                 operation = z_sendmany_twoaddresses(rpc_connection, sendaddress, gw_recipient_addr,
                                                  amount1, gw_deposit_addr, gw_deposit_amount)
                 time.sleep(2)
@@ -1122,8 +1105,14 @@ def convert_file_oracle_D(rpc_connection):
                 while utxo_num > 0:
                     while True:
                         oracle_subscription_hex = rpclib.oracles_subscribe(rpc_connection, new_oracle_txid, rpclib.getinfo(rpc_connection)["pubkey"], "0.001")
-                        oracle_subscription_txid = rpclib.sendrawtransaction(rpc_connection,
+                        if 'hex' in oracle_subscription_hex:
+                            oracle_subscription_txid = rpclib.sendrawtransaction(rpc_connection,
                                                                              oracle_subscription_hex['hex'])
+                        else:
+                            print(colorize("No 'hex' key in oracle_subscription_hex!", 'error'))
+                            print(colorize(oracle_subscription_hex, 'error'))
+                            input(colorize("Press [Enter] to continue...\n", 'continue'))
+                            return
                         mempool = rpclib.get_rawmempool(rpc_connection)
                         if oracle_subscription_txid in mempool:
                             break
