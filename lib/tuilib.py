@@ -327,7 +327,7 @@ def oracle_fund_tui(rpc_connection):
         print(colorize('_' * 65, "blue"))
         print("\n")
     except FileNotFoundError:
-        print("Seems like a no oracles created from this instance yet\n")
+        print("Seems like no oracles created from this instance yet\n")
         pass
     while True:
         try:
@@ -720,7 +720,8 @@ def gateways_send_kmd(rpc_connection_assetchain, rpc_connection, gw_deposit_addr
             gw_deposit_addr = input(colorize("Input gateway deposit address: ",'input'))
         valid = rpc_connection.validateaddress(gw_deposit_addr)['isvalid']
         if not valid:
-            print(colorize("Address is not valid! Try again.",'red'))
+            print(colorize("Gateway deposit address is not valid! Should be a standard or multisig address. Try again.",'red'))
+            gw_deposit_addr = ''
         else:
             break
     while True:
@@ -845,7 +846,17 @@ def gateways_deposit_tui(rpc_connection_assetchain, rpc_connection_komodo,
         print(colorize(raw_tx_info,'rpc_response'))
         height = raw_tx_info["height"]
         # check if oracle contains sample in block > height
-        oracle_txid = rpc_connection_assetchain.gatewaysinfo(bind_txid)['oracletxid']
+        gw_info = rpc_connection_assetchain.gatewaysinfo(bind_txid)
+        if 'error' in gw_info['result']:
+            print(colorize("gatewaysinfo RPC returned no result. Will try importgatewayinfo...",'info'))
+            print(colorize(gw_info,'warning'))
+            gw_info = rpc_connection_assetchain.importgatewayinfo(bind_txid)
+            if 'error' in gw_info['result']:
+                print(colorize("importgatewayinfo RPC returned no result either. Are you sure you have the correct bind txid?",'warning'))
+                print(colorize(gw_info,'warning'))
+                input(colorize("Press [Enter] to exit Deposit TUI...\n", 'continue'))
+                return
+        oracle_txid = gw_info['oracletxid']
         oracle_info = rpc_connection_assetchain.oraclesinfo(oracle_txid)
         print(colorize("[oracle_info]",'info'))
         print(colorize(oracle_info,'rpc_response'))
@@ -2420,62 +2431,41 @@ def check_if_tx_in_mempool(rpc_connection, txid):
             print(colorize("Transaction is mined", "success"))
             break
 
-def gateway_info_tui(rpc_connection, gw_index=''):
-    if gw_index == '':
-        while True:
-            ac_name = rpc_connection.getinfo()['name']
-            print(colorize("\nGateways created on "+ac_name+": \n", "input"))
-            gateways_list = rpc_connection.gatewayslist()
-            if len(gateways_list) == 0:
-                print("Seems like a no gateways created on this assetchain yet!\n")
-                input(colorize("Press [Enter] to continue...\n", 'continue'))
-                return
-            else:
-                i = 1
-                for gateway in gateways_list:
-                    print(colorize("["+str(i)+"] "+gateway, 'info'))
-                    i += 1
-                print("\n")
-                gw_selected = input(colorize("Select Gateway Bind TXID: ", 'input'))
-                gw_index = int(gw_selected)-1
-                try:
-                    bind_txid = gateways_list[gw_index]
-                    break
-                except:
-                    print(colorize("Invalid selection, must be number between 1 and "+str(len(gateways_list)),'warning'))
-                    pass
-    else:
-        while True:
-            try:
-                bind_txid = gateways_list[gw_index]
-                break
-            except:
-                print(colorize("Invalid gateway index, select manually...", 'error'))
-                gateway_info_tui(rpc_connection)
-                pass
+
+
+def gateway_info_tui(rpc_connection):
+    bind_txid = select_gateway(rpc_connection)
     try:    
-        info = rpc_connection.gatewaysinfo(bind_txid)
+        gw_info = rpc_connection.gatewaysinfo(bind_txid)
+        if 'error' in gw_info['result']:
+            gw_info = rpc_connection.importgatewayinfo(bind_txid)
+            if 'error' in gw_info['result']:
+                print(colorize("importgatewayinfo RPC returned no result either. Are you sure you have the correct bind txid?",'warning'))
+                print(colorize(gw_info,'warning'))
+                input(colorize("Press [Enter] to exit Gateway info TUI...\n", 'continue'))
+                return
         print(colorize("Gateways Bind TXID         ["+str(bind_txid)+"]", 'info'))
-        print(colorize("Gateways Oracle TXID       ["+str(info['oracletxid'])+"]", 'info'))
-        print(colorize("Gateways Token TXID        ["+str(info['tokenid'])+"]", 'info'))
-        print(colorize("Gateways Coin              ["+str(info['coin'])+"]", 'info'))
-        print(colorize("Gateways Pubkeys           ["+str(info['pubkeys'])+"]", 'info'))
-        print(colorize("Gateways Deposit Address   ["+str(info['deposit'])+"]", 'info'))
-        print(colorize("Gateways Total Supply      ["+str(info['totalsupply'])+"]", 'info'))
-        print(colorize("Gateways Remaining Supply  ["+str(info['remaining'])+"]", 'info'))
-        print(colorize("Gateways Issued Supply     ["+str(info['issued'])+"]", 'info'))
+        print(colorize("Gateways Oracle TXID       ["+str(gw_info['oracletxid'])+"]", 'info'))
+        print(colorize("Gateways Coin              ["+str(gw_info['coin'])+"]", 'info'))
+        print(colorize("Gateways Pubkeys           ["+str(gw_info['pubkeys'])+"]", 'info'))
+        print(colorize("Gateways Deposit Address   ["+str(gw_info['deposit'])+"]", 'info'))
+        try:
+            print(colorize("Gateways Total Supply      ["+str(gw_info['totalsupply'])+"]", 'info'))
+            print(colorize("Gateways Remaining Supply  ["+str(gw_info['remaining'])+"]", 'info'))
+            print(colorize("Gateways Issued Supply     ["+str(gw_info['issued'])+"]", 'info'))
+            print(colorize("Gateways Token TXID        ["+str(gw_info['tokenid'])+"]", 'info'))
+        except:
+            pass
         input(colorize("Press [Enter] to continue...\n", 'continue'))
-        return gw_index
+        return 
     except Exception as e:
         print(colorize("Something went wrong in gateway_info_tui",'error'))
         print(colorize(e, 'error'))
-        print(colorize(info, 'rpc_response'))
+        print(colorize(gw_info, 'rpc_response'))
         input(colorize("Press [Enter] to continue...\n", 'continue'))
 
 def gateways_deposit_claim_tokens(rpc_connection_assetchain, rpc_connection_komodo):
-    selected_gateway = gateway_info_tui(rpc_connection_assetchain)
-    gateways_list = rpc_connection_assetchain.gatewayslist()
-    bind_txid = gateways_list[selected_gateway]
+    bind_txid = select_gateway(rpc_connection_assetchain)
     gw_info = rpc_connection_assetchain.gatewaysinfo(bind_txid)
     gw_sendmany = gateways_send_kmd(rpc_connection_assetchain, rpc_connection_komodo, gw_info['deposit'])
     gw_sendmany_txid = gw_sendmany[0]
@@ -2487,10 +2477,15 @@ def gateways_deposit_claim_tokens(rpc_connection_assetchain, rpc_connection_komo
     deposit_txid = deposit_info[0]
     dest_pub = deposit_info[1]
     check_if_tx_in_mempool(rpc_connection_assetchain, deposit_txid)
-    claim_txid = gateways_claim_tui(rpc_connection_assetchain, bind_txid, gw_info['coin'],
-                 deposit_txid, dest_pub, gw_deposit_amount)
-    tokenbalance = rpc_connection_assetchain.tokenbalance(gw_info['tokenid'])
-    print(colorize("Gateway transfer complete!", "success"))
+    try:
+        claim_txid = gateways_claim_tui(rpc_connection_assetchain, bind_txid, gw_info['coin'],
+                     deposit_txid, dest_pub, gw_deposit_amount)
+        tokenbalance = rpc_connection_assetchain.tokenbalance(gw_info['tokenid'])
+        print(colorize("Gateway transfer complete!", "success"))
+    except Exception as e:
+        print(colorize("Something went wrong with claim! Ignore this if using gatewaysimport...", "warning"))
+        print(colorize(e, "error"))
+        input(colorize("Press [Enter] to exit Gateway Deposit/Claim TUI...\n", 'continue'))
 
 
 def pegs_fund_tui(rpc_connection):
@@ -3226,15 +3221,36 @@ def select_gateway(rpc_connection):
     gw_list = rpc_connection.gatewayslist()
     if len(gw_list) == 0:
         print(colorize("No gateways on this smart chain!", "red"))
-        input(colorize("Press [Enter] to continue...\n", 'continue'))
-        return 'back to menu'
+        print(colorize("If you are using gatewayimport this is okay, we can enter maunally.", "info"))
+        while True:
+            option = input(colorize("[I]nput bindtxid manually, or [E]xit?\n", 'continue'))
+            if option == 'I' or option == 'i':
+                bind_txid = input(colorize("Enter the bindtxid: ", 'input'))
+                gw_info = rpc_connection.gatewaysinfo(bind_txid)
+                if 'error' in gw_info['result']:
+                    print(colorize("gatewaysinfo RPC returned no result. Will try importgatewayinfo...",'info'))
+                    print(colorize(gw_info,'warning'))
+                    gw_info = rpc_connection.importgatewayinfo(bind_txid)
+                    if 'error' in gw_info['result']:
+                        print(colorize("importgatewayinfo RPC returned no result either. Are you sure you have the correct bind txid?",'warning'))
+                        print(colorize(gw_info,'warning'))
+                    else:
+                        print(colorize("Imported gateway found!",'success'))
+                        return bind_txid
+                else:
+                    print(colorize("Gateway found!",'success'))
+                    return bind_txid
+            elif option == 'E' or option == 'e':
+                sys.exit()
+            else:
+                print(colorize("Please enter [E/e] or [I/i] only!",'warning'))
     i = 1
     for gw in gw_list:
         info = rpc_connection.gatewaysinfo(gw)
         print("["+str(i)+"] "+info['txid']+" | "+info['coin']+" |")
         i +=1
-    selection = validate_selection("Select Gateway: ", gw_list)
-    return selection
+    bind_txid = validate_selection("Select Gateway: ", gw_list)
+    return bind_txid
 
 def select_payments(rpc_connection):
     payments_list = rpc_connection.paymentslist()['createtxids']
