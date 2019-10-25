@@ -2781,7 +2781,7 @@ def pegs_create_tui():
             file.write('"Gateways_Deposit_Address":"'+str(info['deposit'])+'"\n}')
 
         print("Pegs Launch Parameters: "+' '.join(paramlist))
-        print("Pegs Creation TXID         ["+str(bind_txid)+"]")
+        print("Pegs Creation TXID         ["+str(pegs_txid)+"]")
         print("Gateways Bind TXID         ["+str(bind_txid)+"]")
         print("Oracle TXID                ["+str(info['oracletxid'])+"]")
         print("Token TXID                 ["+str(info['tokenid'])+"]")
@@ -3350,3 +3350,95 @@ def select_file(path, ext=''):
         i += 1
     selected = validate_selection(interrogative, file_list)
     return selected
+
+def import_gw_info_tui(rpc_connection, bind_txid=''):
+    if bind_txid == '':
+        bind_txid = input(colorize("Enter Bind TXID: ", 'input'))
+    try:    
+        gw_info = rpc_connection.importgatewayinfo(bind_txid)
+        if 'error' in gw_info['result']:
+            print(colorize("Error in importgatewayinfo! Are you sure you have the correct bind txid?",'warning'))
+            print(colorize(gw_info,'rpc_response'))
+            input(colorize("Press [Enter] to exit Import Gateway Info TUI...\n", 'continue'))
+            return
+        print(colorize("Import Gateways Bind TXID         ["+str(bind_txid)+"]", 'info'))
+        print(colorize("Import Gateways Name              ["+str(gw_info['name'])+"]", 'info'))
+        print(colorize("Import Gateways Required Signers  ["+str(gw_info['M'])+"]", 'info'))
+        print(colorize("Import Gateways Total Signers     ["+str(gw_info['N'])+"]", 'info'))
+        print(colorize("Import Gateways Pubkeys           ["+str(gw_info['pubkeys'])+"]", 'info'))
+        print(colorize("Import Gateways Coin              ["+str(gw_info['coin'])+"]", 'info'))
+        print(colorize("Import Gateways Oracle TXID       ["+str(gw_info['oracletxid'])+"]", 'info'))
+        print(colorize("Import Gateways Deposit Address   ["+str(gw_info['deposit'])+"]", 'info'))
+        print(colorize("Import Gateways Taddr             ["+str(gw_info['taddr'])+"]", 'info'))
+        print(colorize("Import Gateways Prefix            ["+str(gw_info['prefix'])+"]", 'info'))
+        print(colorize("Import Gateways Prefix2           ["+str(gw_info['prefix2'])+"]", 'info'))
+        print(colorize("Import Gateways Wiftype           ["+str(gw_info['wiftype'])+"]", 'info'))
+        input(colorize("Press [Enter] to continue...\n", 'continue'))
+        return 
+    except Exception as e:
+        input(colorize("Something went wrong in Import Gateway Info TUI...\n", 'error'))
+        print(colorize(e, 'error'))
+        print(colorize(gw_info, 'rpc_response'))
+        input(colorize("Press [Enter] to continue...\n", 'continue'))
+
+def import_gw_bind(rpc_connection):
+    print("Function pending... check later...")
+    input(colorize("Press [Enter] to continue...\n", 'continue'))
+    
+def import_gw_address(rpc_connection):
+    print("Function pending... check later...")
+    input(colorize("Press [Enter] to continue...\n", 'continue'))
+    
+def import_gw_partial_signing(rpc_connection):
+    print("Function pending... check later...")
+    input(colorize("Press [Enter] to continue...\n", 'continue'))
+    
+def import_gw_complete_signing(rpc_connection):
+    print("Function pending... check later...")
+    input(colorize("Press [Enter] to continue...\n", 'continue'))
+    
+def import_gw_mark_done(rpc_connection):
+    print("Function pending... check later...")
+    input(colorize("Press [Enter] to continue...\n", 'continue'))
+    
+def import_gw_pending_withdraws(rpc_connection, bind_txid='', coin=''):
+    if bind_txid == '':
+        bind_txid = input(colorize("Enter Bind TXID: ", 'input'))
+    if coin == '':
+        try:
+            gw_info = rpc_connection.importgatewayinfo(bind_txid)
+            coin = gw_info['coin']
+            print(colorize("Coin for ["+bind_txid+"] detected as "+coin, 'success'))
+        except Exception as e:
+            print(colorize("Error in importgatewayprocessed! Are you sure you have the correct bind txid?",'warning'))
+            print(colorize(e,'warning'))
+            print(colorize(gw_info,'rpc_response'))
+            input(colorize("Press [Enter] to exit Import Gateway Pending Withdraws TUI...\n", 'continue'))
+            return
+    resp = rpclib.importgw_pendingwithdraws(rpc_connection, bind_txid, coin)
+    if 'error' in resp:
+        print(colorize(resp, 'warning'))
+    else:
+        print(colorize(resp, 'success'))
+    input(colorize("Press [Enter] to continue...\n", 'continue'))
+    
+def import_gw_processed(rpc_connection, bind_txid='', coin=''):
+    if bind_txid == '':
+        bind_txid = input(colorize("Enter Bind TXID: ", 'input'))
+    if coin == '':
+        try:
+            gw_info = rpc_connection.importgatewayinfo(bind_txid)
+            coin = gw_info['coin']
+            print(colorize("Coin for ["+bind_txid+"] detected as "+coin, 'success'))
+        except Exception as e:
+            print(colorize("Error in importgatewayprocessed! Are you sure you have the correct bind txid?",'warning'))
+            print(colorize(e,'warning'))
+            print(colorize(gw_info,'rpc_response'))
+            input(colorize("Press [Enter] to exit Import Gateway Processed TUI...\n", 'continue'))
+            return
+    resp = rpclib.importgw_processed(rpc_connection, bind_txid, coin)
+    if 'error' in resp:
+        print(colorize(resp, 'warning'))
+    else:
+        print(colorize(resp, 'success'))
+    input(colorize("Press [Enter] to continue...\n", 'continue'))

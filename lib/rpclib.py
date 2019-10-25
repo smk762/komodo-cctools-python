@@ -191,7 +191,12 @@ def oracles_list(rpc_connection):
 
 
 def oracles_samples(rpc_connection, oracletxid, batonutxo, num):
-    oracles_sample = rpc_connection.oraclessamples(oracletxid, batonutxo, num)
+    oracles_samples = rpc_connection.oraclessamples(oracletxid, batonutxo, num)
+    return oracles_samples
+
+# TODO: add this RPC to TUI
+def oracles_sample(rpc_connection, oracletxid, sample_txid):
+    oracles_sample = rpc_connection.oraclessample(oracletxid, sample_txid)
     return oracles_sample
 
 
@@ -230,3 +235,24 @@ def pegs_fund(rpc_connection, pegs_txid, token_txid, amount):
 def pegs_get(rpc_connection, pegs_txid, token_txid, amount):
     pegsget_hex = rpc_connection.pegsget(pegs_txid, token_txid, str(amount))
     return pegsget_hex
+
+# Import Gateways CC calls
+
+def importgw_processed(rpc_connection, bindtxid, coin):
+    resp = rpc_connection.importgatewayprocessed(bindtxid, coin)
+    return resp
+
+def importgw_pendingwithdraws(rpc_connection, bindtxid, coin):
+    resp = rpc_connection.importgatewaypendingwithdraws(bindtxid, coin)
+    return resp
+
+#use 'importgatewaybind coin orcletxid M N pubkeys pubtype p2shtype wiftype [taddr]' to bind an import gateway
+#use 'importgatewaydeposit bindtxid height coin burntxid nvout rawburntx rawproof destpub amount' to import deposited coins
+
+#importgatewaycompletesigning withdrawtxid coin hex
+
+#importgatewaymarkdone completesigningtx coin
+#importgatewayspartialsign txidaddr refcoin hex
+
+#importgatewayinfo bindtxid
+#importgatewayddress [pubkey]

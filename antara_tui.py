@@ -122,6 +122,33 @@ gw_use['menu'] = [
 ]
 gw_use['author'] = 'Welcome to the Gateways Usage TUI!\nCLI version 0.2 by Anton Lysakov & Thorn Mennet\n'
 
+
+gw_import = {}
+gw_import['name'] = 'GW import'
+gw_import['header'] = "\
+                  _                       _____       _                                   __  __           _       _      \n\
+      /\         | |                     / ____|     | |                                 |  \/  |         | |     | |      \n \
+    /  \   _ __ | |_ __ _ _ __ __ _    | |  __  __ _| |_ _____      ____ _ _   _ ___    | \  / | ___   __| |_   _| | ___  \n \
+   / /\ \ | '_ \| __/ _` | '__/ _` |   | | |_ |/ _` | __/ _ \ \ /\ / / _` | | | / __|   | |\/| |/ _ \ / _` | | | | |/ _ \ \n \
+  / ____ \| | | | || (_| | | | (_| |   | |__| | (_| | ||  __/\ V  V / (_| | |_| \__ \   | |  | | (_) | (_| | |_| | |  __/ \n \
+ /_/    \_\_| |_|\__\__,_|_|  \__,_|    \_____|\__,_|\__\___| \_/\_/ \__,_|\__, |___/   |_|  |_|\___/ \__,_|\__,_|_|\___| \n \
+                                                                            __/ |                                        \n \
+                                                                           |___/                                         \n "
+
+
+gw_import['menu'] = [
+    {"Check assetchain mempool": tuilib.print_mempool},
+    {"View Import Gateway Info": tuilib.import_gw_info_tui},
+    {"Import Gateway Bind": tuilib.import_gw_bind},
+    {"Import Gateway Address": tuilib.import_gw_address},
+    {"Import Gateway Partial Signing": tuilib.import_gw_partial_signing},
+    {"Import Gateway Complete Signing": tuilib.import_gw_complete_signing},
+    {"Import Gateway Mark Done": tuilib.import_gw_mark_done},
+    {"Import Gateway Pending Withdraws": tuilib.import_gw_pending_withdraws},
+    {"Import Gateway Processed": tuilib.import_gw_processed}
+]
+gw_import['author'] = 'Welcome to the Gateways Import TUI!\nCLI version 0.2 by Thorn Mennet\n'
+
 payments = {}
 payments['name'] = 'Payments'
 payments['header'] = "\
@@ -158,6 +185,7 @@ antara['menu'] = [
     {"Oracles": oracles},
     {"Gateways Creation": gw_create},
     {"Gateways Usage": gw_use},
+    {"Gateways Import": gw_import},
     {"Pegs Creation": pegs_create},
     {"Pegs Usage": pegs_usage},
     {"Payments": payments},
@@ -213,7 +241,7 @@ def get_rpc_status(menu, rpc_connection='', rpc_connection_kmd=''):
     return status_str, menuItems, rpc_connection_kmd, rpc_connection
 
 
-main_menu_options = ["Oracles", "Gateways Creation", "Gateways Usage", "Pegs Creation", "Pegs Usage", "Payments"]
+main_menu_options = ["Oracles", "Gateways Creation", "Gateways Import", "Gateways Usage", "Pegs Creation", "Pegs Usage", "Payments"]
 rpc_connect_options = ["Connect to KMD daemon", "Connect to Smartchain"]
 ac_rpc_options = ["Check connection to Smartchain"]
 kmd_rpc_options = ["Check connection to KMD"]
