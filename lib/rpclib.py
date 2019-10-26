@@ -252,7 +252,6 @@ def importgw_pendingwithdraws(rpc_connection, bindtxid, coin):
 #importgatewaycompletesigning withdrawtxid coin hex
 
 #importgatewaymarkdone completesigningtx coin
-#importgatewayspartialsign txidaddr refcoin hex
+#importgatewaypartialsign txidaddr refcoin hex
 
-#importgatewayinfo bindtxid
 #importgatewayddress [pubkey]

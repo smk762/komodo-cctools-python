@@ -729,9 +729,9 @@ def gateways_send_kmd(rpc_connection_assetchain, rpc_connection, gw_deposit_addr
         gw_recipient_addr = input(colorize("Input Gateway recipient "+ac_name+" address (linked to pubkey which will receive tokens): ",'input'))
         valid = rpc_connection.validateaddress(gw_recipient_addr)['isvalid']
         if not valid:
-            print(colorize("Address is not valid! Try again.",'red'))
+            print(colorize("Gateway recipient address is not valid! Try again.",'red'))
         elif gw_deposit_addr == gw_recipient_addr:
-            print(colorize("Gateway recipient address must be different to Gateway address! Try again.",'red'))
+            print(colorize("Gateway recipient address must be different to Gateway deposit address! Try again.",'red'))
         else:
             break
     #have to show here deposit addresses for gateways created by user
@@ -3247,7 +3247,7 @@ def select_gateway(rpc_connection):
     i = 1
     for gw in gw_list:
         info = rpc_connection.gatewaysinfo(gw)
-        print("["+str(i)+"] "+info['txid']+" | "+info['coin']+" |")
+        print("["+str(i)+"] "+gw+" | "+info['coin']+" |")
         i +=1
     bind_txid = validate_selection("Select Gateway: ", gw_list)
     return bind_txid
