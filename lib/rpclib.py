@@ -8,6 +8,48 @@ from bitcoin.wallet import P2PKHBitcoinAddress
 from bitcoin.core import x
 from bitcoin.core import CoreMainParams
 
+def colorize(string, color):
+        colors = {
+                'black':'\033[30m',
+
+                'red':'\033[31m',
+                'error':'\033[31m',
+
+                'green':'\033[32m',
+                'success':'\033[32m',
+
+                'orange':'\033[33m',
+                'continue':'\033[33m',
+
+                'blue':'\033[34m',
+                'info':'\033[34m',
+
+                'purple':'\033[35m',
+
+                'cyan':'\033[36m',
+
+                'lightgrey':'\033[37m',
+
+                'darkgrey':'\033[90m',
+                'rpc_response':'\033[90m',
+
+                'lightred':'\033[91m',
+                'warning':'\033[91m',
+
+                'lightgreen':'\033[92m',
+
+                'yellow':'\033[93m',
+                'input':'\033[93m',
+
+                'lightblue':'\033[94m',
+                'pink':'\033[95m',
+                'lightcyan':'\033[96m',
+        }
+        if color not in colors:
+                return str(string)
+        else:
+                return colors[color] + str(string) + '\033[0m'
+
 class CoinParams(CoreMainParams):
     MESSAGE_START = b'\x24\xe9\x27\x64'
     DEFAULT_PORT = 7770
