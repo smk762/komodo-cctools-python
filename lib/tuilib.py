@@ -1062,6 +1062,20 @@ def gateways_claim_tui(rpc_connection, bind_txid='', coin_name='', deposit_txid=
                 claim_txid = rpclib.sendrawtransaction(rpc_connection, claim_hex["hex"])
                 check_if_tx_in_mempool(rpc_connection, claim_txid)
                 print(colorize("Succesfully claimed! Claim transaction id: ["+claim_txid+"]", 'success'))
+                gw_deposit_details = {"gw_sendmany_txid": coin_txid,
+                                   "gw_recipient_addr": rpclib.get_radd_from_pub(dest_pub),
+                                   "gw_recipient_pub": dest_pub,
+                                   "gw_deposit_txid": deposit_txid,
+                                   "gw_deposit_amount": amount,
+                                   "gw_coin": coin_name,
+                                   "gw_claim_txid": claim_txid,
+                                   "gw_bind_txid": bind_txid,
+                                   "gw_deposit_status": "claimed"}
+                gw_deposit_json = json.dumps(gw_deposit_details)
+                if not os.path.exists(cwd+"/gw_deposits"):
+                    os.makedirs(cwd+"/gw_deposits")
+                with open(cwd+"/gw_deposits/gw_deposit_"+coin_txid+".json", "w+") as file:
+                    file.write(gw_deposit_json)
                 input(colorize("Press [Enter] to continue...\n", 'continue'))
                 return claim_txid
             elif 'error' in claim_hex:
