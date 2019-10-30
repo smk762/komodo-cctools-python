@@ -1103,8 +1103,14 @@ def gateways_withdrawal_tui(rpc_connection):
         withdraw_pub = input("Input pubkey to which you want to withdraw: ")
         amount = input("Input amount of withdrawal: ")
         withdraw_hex = rpclib.gateways_withdraw(rpc_connection, bind_txid, coin_name, withdraw_pub, amount)
-        withdraw_txid = rpclib.sendrawtransaction(rpc_connection, withdraw_hex["hex"])
-        print(withdraw_txid)
+        if 'error' in withdraw_hex:
+            print(colorize("Something went wrong in gateways withdrawl...\n", 'error'))
+            print(colorize(withdraw_hex, 'rpc_response'))
+            input(colorize("Press [Enter] to continue...\n", 'continue'))
+            break
+        else:
+            withdraw_txid = rpclib.sendrawtransaction(rpc_connection, withdraw_hex["hex"])
+            print(withdraw_txid)
         input(colorize("Press [Enter] to continue...\n", 'continue'))
         break
 
